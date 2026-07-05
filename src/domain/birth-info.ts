@@ -32,6 +32,23 @@ export type NormalizedBirthInfo = Required<
 >;
 
 const DEFAULT_TIMEZONE = "Asia/Seoul";
+const BIRTHPLACE_LOOKUP_ALIASES: Record<string, string> = {
+  seoul: "서울",
+  seoulkorea: "서울",
+  seoulsouthkorea: "서울",
+  seoulrepublicofkorea: "서울",
+  busan: "부산",
+  pusan: "부산",
+  incheon: "인천",
+  daegu: "대구",
+  taegu: "대구",
+  daejeon: "대전",
+  ulsan: "울산",
+  sejong: "세종",
+  jeju: "제주",
+  jejucity: "제주",
+  tokyo: "도쿄",
+};
 
 export function normalizeBirthInfo(input: BirthInfoInput): NormalizedBirthInfo {
   assertIntegerInRange(input.year, 1900, 2100, "year");
@@ -113,13 +130,18 @@ function resolveBirthLocation(input: BirthInfoInput): Pick<
 }
 
 function findBirthplaceMatches(query: string): City[] {
-  const matches = filterCities(query);
-  const normalizedQuery = normalizePlaceName(query);
+  const lookupQuery = normalizeBirthplaceLookupQuery(query);
+  const matches = filterCities(lookupQuery);
+  const normalizedQuery = normalizePlaceName(lookupQuery);
   const exactMatches = matches.filter((city) =>
     cityAliases(city).some((alias) => normalizePlaceName(alias) === normalizedQuery),
   );
 
   return exactMatches.length > 0 ? exactMatches : matches;
+}
+
+function normalizeBirthplaceLookupQuery(query: string): string {
+  return BIRTHPLACE_LOOKUP_ALIASES[normalizePlaceName(query)] ?? query;
 }
 
 function cityAliases(city: City): string[] {

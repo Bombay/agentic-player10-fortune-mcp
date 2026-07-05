@@ -32,6 +32,23 @@ describe("normalizeBirthInfo", () => {
     expect(result.longitude).toBe(126.978);
   });
 
+  it("normalizes common English birthplace aliases before city lookup", () => {
+    const result = normalizeBirthInfo({
+      year: 1993,
+      month: 3,
+      day: 12,
+      hour: 9,
+      minute: 45,
+      gender: "M",
+      birthplace: "Seoul",
+    });
+
+    expect(result.birthplace).toBe("서울");
+    expect(result.timezone).toBe("Asia/Seoul");
+    expect(result.latitude).toBe(37.5665);
+    expect(result.longitude).toBe(126.978);
+  });
+
   it("rejects ambiguous city names unless the region is included", () => {
     expect(() =>
       normalizeBirthInfo({
