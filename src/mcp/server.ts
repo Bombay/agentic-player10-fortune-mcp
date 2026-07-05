@@ -9,17 +9,22 @@ export const fortuneInputSchema = {
   hour: z.number().int().min(0).max(23).describe("Birth hour, 0-23 local time."),
   minute: z.number().int().min(0).max(59).describe("Birth minute, 0-59."),
   gender: z.enum(["M", "F"]).describe("Gender used by the astrology calculation system."),
-  birthplace: z.string().min(1).optional().describe("Birthplace label. Defaults to Seoul."),
-  timezone: z.string().min(1).optional().describe("IANA timezone label. Defaults to Asia/Seoul."),
-  latitude: z.number().min(-90).max(90).optional().describe("Birthplace latitude. Defaults to Seoul."),
-  longitude: z.number().min(-180).max(180).optional().describe("Birthplace longitude. Defaults to Seoul."),
+  birthplace: z
+    .string()
+    .min(1)
+    .describe(
+      "Required birthplace city or region label, such as 서울, 부산, 광주광역시, 도쿄. Ask the user for birthplace before calling this tool.",
+    ),
+  timezone: z.string().min(1).optional().describe("Optional IANA timezone label. Known cities are resolved automatically when possible."),
+  latitude: z.number().min(-90).max(90).optional().describe("Optional birthplace latitude. Provide together with longitude for manual coordinates."),
+  longitude: z.number().min(-180).max(180).optional().describe("Optional birthplace longitude. Provide together with latitude for manual coordinates."),
 };
 
 export const toolDefinition = {
   name: "generate_fortune_context",
   title: "Generate Fortune Context",
   description:
-    "Generates one AI-readable Markdown context pack from birth information, including Saju/Four Pillars, Zi Wei Dou Shu, and Western natal chart data. Use this tool when the user wants a fortune, astrology, timing, career, relationship, or compatibility-style consultation. The tool only provides chart information; the host AI should interpret it warmly and cautiously for the user's concern.",
+    "Generates one AI-readable Markdown context pack from birth information, including Saju/Four Pillars, Zi Wei Dou Shu, and Western natal chart data in the same AI-copy style as sky.told.me. Use this tool when the user wants a fortune, astrology, timing, career, relationship, or compatibility-style consultation. Birthplace is required; ask for it before calling the tool. The tool only provides chart information; the host AI should interpret it warmly and cautiously for the user's concern.",
   inputSchema: fortuneInputSchema,
   annotations: {
     title: "Generate Fortune Context",
