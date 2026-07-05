@@ -105,6 +105,42 @@ Officially supported preliminary testing path:
 
 The contest page explicitly says temporary registration is used for PlayMCP testing before review.
 
+## Redeployment Finding
+
+Observed on 2026-07-05:
+
+- Pushing a new commit to the Git repository does not automatically update the existing PlayMCP in KC deployment.
+- The existing public endpoint still returned the old `tools/list` schema after commit `2ff191f` was pushed.
+- The PlayMCP in KC detail page exposes lifecycle actions for start, stop, and delete. The "start" action calls `/api/v2/mcp/my-mcp-servers/{id}/start` and is an activation/restart action, not a Git source rebuild.
+- The PlayMCP in KC Git source flow creates a new MCP server by posting to `/api/v2/mcp/builder/image-mcp-servers`.
+- The PlayMCP developer console supports editing an existing registered MCP by patching `v1/mcps/{id}` and includes `endpointUrl` in the editable form state.
+
+Recommended redeploy path for this project:
+
+1. Keep the existing KakaoCloud MCP server running until the replacement is verified.
+2. In PlayMCP in KC, create a new Git source build from the latest GitHub `main` branch.
+3. Wait until the new MCP server status is active and copy the new public `/mcp` endpoint.
+4. Verify the new endpoint with MCP `tools/list` and a sample `tools/call`.
+5. In the PlayMCP developer console, edit the existing temporary registered MCP and replace `endpointUrl` with the new endpoint.
+6. Click information loading/check in the console so PlayMCP refreshes tool metadata.
+7. Save as temporary registration, apply it to AI Chat, and test.
+8. Delete the old PlayMCP in KC server only after the PlayMCP console and AI Chat both use the new endpoint successfully.
+
+Avoid deleting the old server before the replacement endpoint is confirmed, because delete changes the server state to `Deleted` and clears endpoint information in PlayMCP in KC.
+
+Current redeployment state after the 2026-07-05 fix:
+
+- Active replacement endpoint: `https://fortune-context-mcp-v3.playmcp-endpoint.kakaocloud.io/mcp`
+- Replacement PlayMCP in KC server: `fortune-context-mcp-v3`, ID `1445`, status `Active`.
+- Previous PlayMCP in KC server kept running for rollback: `fortune-context-mcp-v2`, ID `1443`.
+- Old PlayMCP in KC server deleted to free the 2-server account limit: `fortune-context-mcp`, ID `1436`.
+- Verification passed:
+  - `tools/list` marks `birthplace` as required.
+  - sample `tools/call` with `birthplace: "Seoul"` normalized to `서울`.
+  - sample `tools/call` output includes `四柱八字`, `紫微斗數 命盤`, `Natal Chart`, and `Houses (Placidus)`.
+  - PlayMCP developer console information loading succeeded and the temporary MCP registration was saved with the replacement endpoint.
+  - PlayMCP AI Chat called `generate_fortune_context` and generated a career-change reading from an English-birthplace prompt.
+
 ## KakaoTalk / Kakao Tools Test Path
 
 Current official text indicates:
@@ -135,10 +171,10 @@ Required inputs:
 - `hour`
 - `minute`
 - `gender`
+- `birthplace`
 
 Optional inputs:
 
-- `birthplace`
 - `timezone`
 - `latitude`
 - `longitude`

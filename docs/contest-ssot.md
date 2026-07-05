@@ -56,6 +56,23 @@ Container image requirements:
 - Image must be built for `linux/amd64`.
 - Apple Silicon builds should use `docker build --platform linux/amd64 ...`.
 
+Redeployment finding observed on 2026-07-05:
+
+- Git source pushes do not automatically update an already deployed PlayMCP in KC server.
+- PlayMCP in KC exposes create, start, stop, and delete flows, but no confirmed Git-source redeploy flow for an existing server.
+- The safest redeployment strategy is to create a replacement PlayMCP in KC server from the latest Git source, verify its new endpoint, then update the existing PlayMCP developer console registration to that endpoint.
+- Delete the old PlayMCP in KC server only after the replacement endpoint works in PlayMCP AI Chat.
+
+Redeployment result on 2026-07-05:
+
+- Current PlayMCP developer console endpoint: `https://fortune-context-mcp-v3.playmcp-endpoint.kakaocloud.io/mcp`
+- Current PlayMCP in KC server: `fortune-context-mcp-v3`, ID `1445`, status `Active`.
+- Rollback PlayMCP in KC server kept active: `fortune-context-mcp-v2`, ID `1443`, status `Active`.
+- Old PlayMCP in KC server deleted to free the 2-server account limit: `fortune-context-mcp`, ID `1436`.
+- Verified the current endpoint with MCP `tools/list` and a sample `generate_fortune_context` call using `birthplace: "Seoul"`.
+- The PlayMCP developer console temporary registration was updated, information-loaded, and saved against the current endpoint.
+- PlayMCP AI Chat successfully called `generate_fortune_context` and generated a career-change reading from an English-birthplace prompt.
+
 ## MCP Protocol Constraints
 
 - Remote MCP server only.
