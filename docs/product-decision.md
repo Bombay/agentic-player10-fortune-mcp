@@ -116,9 +116,9 @@ Use one tool first:
 1. `generate_fortune_context`
    - Receives one-time birth information.
    - Receives the user's latest request in the optional `question` field.
-   - Returns a complete Korean counseling answer when Workers AI is configured.
+   - Returns a complete Korean counseling answer when the selected external generator is configured; the current deployment uses Cerebras `gpt-oss-120b`.
    - Instructs the host AI to deliver the complete answer without summarizing or adding interpretation.
-   - Falls back to the original chart context when external generation is unavailable or fails quality checks.
+   - Falls back to deterministic interpretation guidance and verified facts when external generation is unavailable or fails quality checks.
    - Does not store the user's profile.
 
 Rationale:
@@ -128,10 +128,8 @@ Rationale:
 - A single high-quality tool has less user and model confusion than several overlapping reading-type tools.
 - Reading type is unnecessary because the user's natural-language question already tells the generator whether the concern is career, relationship, timing, compatibility, or general self-understanding.
 
-## Open Questions
+## Remaining Questions
 
-- Should we accept AGPL-3.0-only obligations and use `@orrery/core`, or implement a smaller independent calculation core?
-- Should unknown birth time omit Zi Wei Dou Shu entirely, or return Saju + approximate natal chart with clear caveats?
-- What exact input fields should be required: birth date, birth time, gender, birthplace, timezone, longitude/latitude?
-- How long should the returned chart context be to balance completeness with PlayMCP response speed and chat readability?
-- Which retention features should be saved for the finalist version?
+- How should an unknown birth time degrade the three calculation systems without implying false precision?
+- Which consent-based profile or retention features, if any, should be reserved for a finalist version?
+- Which paid inference capacity should replace the Cerebras free plan before public traffic or finalist voting?
