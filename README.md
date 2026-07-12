@@ -101,7 +101,7 @@ npm run benchmark:reading
 
 On 2026-07-12, three five-call runs at the former 2.5-second deadline measured 2,460-2,554ms maximum and 2,219-2,447ms average, with one or two grounded Gemma answers per run and guided fallbacks for the remainder. Later checks varied from a 2,570ms truncated completion to repeated timeouts beyond 30 seconds. With the 600-token budget, one grounded complete reading finished in 19,334ms. The product decision now favors waiting up to 60 seconds with the larger completion budget. PlayMCP already shows a generic `TOOL call / loading` state while the call is pending, but its public client does not expose custom MCP progress stages. This quality-first timeout does not satisfy PlayMCP's documented average 100ms and mandatory p99 3,000ms guidance, so it must be treated as a submission risk rather than a performance-compliant configuration.
 
-Current deployment: `https://fortune-reading-mcp-v3.playmcp-endpoint.kakaocloud.io/mcp` (`fortune-reading-mcp-v3`, ID `2867`, Active).
+Current deployment: `https://fortune-reading-mcp-v4.playmcp-endpoint.kakaocloud.io/mcp` (`fortune-reading-mcp-v4`, ID `2889`, Active).
 
 Do not commit `.env` or put the API token in the Docker image. Use PlayMCP in KC deployment secrets.
 
@@ -124,7 +124,7 @@ npm run benchmark:reading:cerebras -- gpt-oss-120b 3000 2500 5 12500
 
 On 2026-07-12, the final five-call run produced five grounded complete readings with 749ms average and 860ms maximum latency. A three-scenario run covering Saju, Zi Wei Dou Shu, and Western astrology produced three grounded complete readings with 726ms average and 750ms maximum latency. The account's displayed free quota is five requests per minute, 150 per hour, 2,400 per day, and one million tokens per day. This clears PlayMCP's 3,000ms p99 boundary in the measured samples but not its separate 100ms average target.
 
-The deployed endpoint returned MCP initialize in 194ms, `tools/list` in 68ms, and a complete Saju-only `tools/call` in 1,012ms. PlayMCP information loading, the existing draft update, and AI Chat delivery all passed against v3. The previous v2 server was deleted after those checks, so only one KakaoCloud MCP server remains.
+The v0.3.1 endpoint returned MCP initialize in 490ms, `tools/list` in 174ms, and a complete default reading in 1,170ms. The output included the final consultation, plain-language explanations, and an expert-evidence section. PlayMCP information loading, the existing draft update, and the two-turn AI Chat flow all passed against v4. The previous v3 server was deleted after those checks, so only one KakaoCloud MCP server remains.
 
 The contest preliminary build intentionally uses the Cerebras free plan to keep the validation MVP simple and cost-free. Its five-request-per-minute quota is suitable only for judging, demos, and low-volume testing; it is not presented as production capacity. If the project advances to public Kakao Tools voting or receives real user traffic, the operator must move to paid inference capacity before public exposure. End users are never asked to purchase or configure an LLM account.
 

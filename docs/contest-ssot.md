@@ -95,6 +95,17 @@ Cerebras preliminary deployment result on 2026-07-12:
 - The existing PlayMCP draft was edited in place, information loading succeeded, and AI Chat passed `question` with the requested Saju-only scope. The tool returned `# 상담 결과`, and the Kakao host delivered all four sections.
 - The replaced `fortune-reading-mcp-v2` server, ID `2844`, was deleted only after direct and PlayMCP AI Chat verification. KakaoCloud now contains only v3.
 
+Plain-language v0.3.1 deployment result on 2026-07-12:
+
+- Git commit `966b72b` was pushed to the public GitHub `main` branch.
+- Current PlayMCP developer console endpoint: `https://fortune-reading-mcp-v4.playmcp-endpoint.kakaocloud.io/mcp`
+- Current PlayMCP in KC server: `fortune-reading-mcp-v4`, ID `2889`, status `Active`.
+- The runtime keeps the same Cerebras provider limits while sending compact deterministic interpretation and evidence cards instead of the full raw chart dump.
+- Direct endpoint verification passed: initialize 490ms, `tools/list` 174ms, and a complete default `tools/call` 1,170ms. The server reported version `0.3.1`.
+- The default no-question path returned `# 상담 결과`, easy explanations, and `### 함께 확인된 근거` while retaining technical terms such as 일간, 식신, 편관, 대운, and 세운.
+- The existing PlayMCP draft was edited in place and saved against v4. AI Chat reproduced the real two-turn flow, requested all six birth fields including birthplace, called the Tool with the correct normalized arguments, and delivered all five sections.
+- The replaced v3 server, ID `2867`, was deleted only after direct and PlayMCP AI Chat verification. KakaoCloud now contains only v4.
+
 ## MCP Protocol Constraints
 
 - Remote MCP server only.

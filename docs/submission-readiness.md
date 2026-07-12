@@ -12,18 +12,18 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 
 | Area | Status | Evidence |
 | --- | --- | --- |
-| Kakao Cloud deployment | Pass | `fortune-reading-mcp-v3`, ID `2867`, Active; only one server remains |
-| Public Streamable HTTP endpoint | Pass | `https://fortune-reading-mcp-v3.playmcp-endpoint.kakaocloud.io/mcp` |
+| Kakao Cloud deployment | Pass | `fortune-reading-mcp-v4`, ID `2889`, Active; only one server remains |
+| Public Streamable HTTP endpoint | Pass | `https://fortune-reading-mcp-v4.playmcp-endpoint.kakaocloud.io/mcp` |
 | Supported MCP protocol | Pass | PlayMCP information loading and official MCP Inspector CLI succeeded |
 | Working Tool count | Pass | One Tool; review policy requires at least one |
 | Tool metadata | Pass | `name`, `description`, `inputSchema`, and all five annotations present |
 | Naming policy | Pass | Server and Tool names do not contain `kakao` |
 | Text response format | Pass | Markdown `TextContent` |
 | Response size | Pass | Deterministic fallback measured 6,078 bytes, below the 24k limit |
-| Response latency | **Measured p99 passes; average risk remains** | Cerebras samples: 749ms average / 860ms max and 726ms average / 750ms max; deployed Saju call 1,012ms; below 3,000ms p99 but above the 100ms average target |
+| Response latency | **Measured p99 passes; average risk remains** | Cerebras samples: 749ms average / 860ms max and 726ms average / 750ms max; deployed v0.3.1 call 1,170ms; below 3,000ms p99 but above the 100ms average target |
 | Origin validation | Pass | Deployed implementation rejects untrusted browser origins with HTTP 403 |
 | MCP Inspector | Pass | Both `tools/list` and `tools/call` succeeded against the deployed endpoint |
-| Automated tests | Pass | 9 files, 35 tests |
+| Automated tests | Pass | 9 files, 36 tests |
 | Preliminary capacity disclosure | Pass | Cerebras free plan is documented as judging/demo capacity only; paid operator capacity is required before public exposure |
 | TypeScript build | Pass | `npm run build` |
 | Linux AMD64 image | Pass | Docker image built successfully from a clean `npm ci` |
@@ -35,7 +35,7 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 | Secret history scan | Pass | No Cerebras key pattern found in tracked source or Git history |
 | Personal data storage | Pass | Birth inputs are not persisted; raw inputs are not sent to Cerebras |
 | Representative image | Pass | Static 600x600 PNG, appropriate to the service |
-| PlayMCP temporary registration | Pass | Existing registration points to `v3`; information load, save, Tool call, and AI Chat tested |
+| PlayMCP temporary registration | Pass | Existing registration points to `v4`; information load, save, Tool call, and two-turn AI Chat flow tested |
 | PlayMCP review request | Not started | Must be requested after final replacement endpoint is verified |
 | Public visibility | Not available yet | Change from private to public after review approval |
 | Contest form | Not submitted | Submit once using the public PlayMCP detail URL |

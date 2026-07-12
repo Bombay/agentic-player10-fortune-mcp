@@ -164,6 +164,17 @@ Current Cerebras preliminary deployment state observed on 2026-07-12:
 - The existing temporary PlayMCP registration was edited in place, information-loaded, and saved against v3. AI Chat passed the current question and birth arguments, then delivered all four sections from `# 상담 결과` without mentioning other requested-to-exclude systems.
 - The previous v2 server was deleted after verification. KakaoCloud now has one active server, v3.
 
+Current plain-language v0.3.1 deployment state observed on 2026-07-12:
+
+- Git commit `966b72b` was pushed to the public GitHub `main` branch.
+- Active endpoint: `https://fortune-reading-mcp-v4.playmcp-endpoint.kakaocloud.io/mcp`
+- PlayMCP in KC server: `fortune-reading-mcp-v4`, ID `2889`, status `Active`.
+- Runtime configuration remains `FORTUNE_READING_PROVIDER=cerebras`, `CEREBRAS_AI_MODEL=gpt-oss-120b`, `CEREBRAS_AI_TIMEOUT_MS=2500`, and `CEREBRAS_AI_MAX_TOKENS=900`.
+- Direct verification succeeded: initialize 490ms, `tools/list` 174ms, and a complete default `tools/call` 1,170ms. The server reported version `0.3.1`.
+- The response contained `# 상담 결과`, all five expected Markdown sections, plain-language explanations, and expert evidence. It also passed the deterministic check for `일간이 갑목`.
+- The existing temporary PlayMCP registration was edited in place, information-loaded, and saved against v4. AI Chat first requested year, month, day, time, gender, and birthplace, then called the Tool with the expected 1988-04-19 08:30 male Seoul arguments and delivered the completed answer.
+- The previous v3 server was deleted after verification. KakaoCloud now has one active server, v4.
+
 ## KakaoTalk / Kakao Tools Test Path
 
 Current official text indicates:
