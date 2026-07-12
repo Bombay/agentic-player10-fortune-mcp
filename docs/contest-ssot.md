@@ -98,6 +98,7 @@ Secured Gemma deployment result on 2026-07-12:
 
 ## Tool Constraints
 
+- At least one working Tool is required.
 - Tool name length: 1 to 128 characters.
 - Tool names may include only English letters, numbers, underscore, and hyphen.
 - Tool names are case-sensitive.
@@ -128,12 +129,14 @@ Secured Gemma deployment result on 2026-07-12:
 - Raw API JSON dumps are discouraged.
 - Results should be compact and human-readable.
 - Tool errors should be converted into clean text.
+- Tool response text over 24k is treated as an error and can be a rejection reason.
 
 ## Operation Constraints
 
 - Tool response speed target:
   - Average: within 100ms.
   - p99: within 3,000ms.
+- The development guide marks the p99 requirement as mandatory, and the review policy separately lists slow or frequently timing-out tools as a rejection reason.
 - Tool answers must not induce ad exposure.
 - MCP servers with persistent connection issues, auth failures, or harmful behavior may be restricted or removed.
 
@@ -148,7 +151,9 @@ Secured Gemma deployment result on 2026-07-12:
 - The tool sets `idempotentHint: false` because generated wording can vary.
 - The code default remains a 2,800ms deadline to protect the PlayMCP response path, but Gemma 4 did not complete a rich answer within that budget.
 - Local fact-card tests with thinking disabled observed complete-answer latency from about 5 to 15.5 seconds. Local quality testing therefore uses a 20,000ms timeout.
-- Do not deploy the external generation path until the latency strategy is decided. Options include a faster Workers AI model, a shorter answer, or accepting a longer platform response time only after PlayMCP testing confirms it is tolerated.
+- Do not request preliminary review until the latency strategy is explicitly decided. Options include deterministic responses, a redesigned short generation path, or knowingly accepting the review risk of a longer response.
+- The temporary 2026-07-12 deployment uses a 20,000ms timeout and returned complete answers in about 8.9 to 12.1 seconds. PlayMCP AI Chat tolerated the call, but this does not satisfy the documented operating requirement and remains a preliminary-review blocker.
+- Drop-in model checks did not solve both constraints: GLM-4.7-Flash took about 8.8 seconds for a complete answer, while Llama 3.1 8B Fast took about 3.5 seconds and produced materially weaker Korean interpretation.
 - Timeout, non-success response, empty output, truncated completion, refusal, fewer than three Markdown sections, or output shorter than 700 characters triggers the deterministic fallback.
 - PlayMCP in KC deployment must inject `CLOUDFLARE_API_TOKEN` as a secret. It must never be committed or embedded in the container image.
 
@@ -163,6 +168,8 @@ Secured Gemma deployment result on 2026-07-12:
 - The user's question is sent because a focused final answer requires it. Tool guidance should discourage names, contact details, or unrelated sensitive information in that field.
 - The preliminary MVP should avoid OAuth, custom-header identity, external DB, and account-level personalization unless they become strictly required.
 - Users provide birth information per request or per chat session.
+- PlayMCP and Kakao Tools do not document automatic injection of the logged-in user's Kakao birth date or gender into MCP arguments.
+- A separate Kakao Login app plus MCP OAuth bridge could request `birthyear`, `birthday`, and `gender` with user consent, but birth time and birthplace would still need direct input. This is deferred until finals; see `docs/kakao-profile-data.md`.
 - Tool responses should not echo sensitive input more than needed.
 - If finalist/future personalization is added, use an external datastore and store only the minimum profile required:
   - Birth date.

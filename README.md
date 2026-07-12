@@ -13,6 +13,8 @@
 - [Product Decision](docs/product-decision.md): why the project is now focused on the saju MCP instead of the MCP discovery MCP.
 - [Feasibility Review](feasibility.md): implementation feasibility notes for both candidate ideas.
 - [Testing and Deployment](docs/testing-and-deployment.md): local checks, Docker build, PlayMCP temporary registration, and KakaoTalk/Kakao Tools testing path.
+- [Kakao Profile Data](docs/kakao-profile-data.md): whether birth date and gender can be supplied from a Kakao account.
+- [Submission Readiness](docs/submission-readiness.md): current preliminary-review checklist, evidence, and remaining blockers.
 
 ## Confirmed Constraints
 
@@ -70,6 +72,8 @@ It accepts one-time birth information plus the user's current question and retur
 
 The external LLM request excludes the raw birth date/time, birthplace, coordinates, input summary, and full chart dump. It sends only the user's current question and deterministic fact cards needed for that question. Those facts can still permit indirect inference, so the service does not claim that the payload is fully anonymous.
 
+The MCP does not receive Kakao account profile fields automatically. The preliminary version therefore asks for birth date, time, gender, and birthplace in the conversation and does not persist them.
+
 ## Workers AI
 
 Create a Workers AI API token with only Workers AI read/edit access, then configure:
@@ -88,9 +92,13 @@ Optional variables:
 - `CLOUDFLARE_AI_MODEL` (default: `@cf/google/gemma-4-26b-a4b-it`)
 - `CLOUDFLARE_AI_TIMEOUT_MS` (default: `2800`)
 
-Local Gemma quality tests use `20000`. Observed complete-answer latency ranged from about 5 to 15.5 seconds, so production timeout and model choice remain unresolved before deployment.
+Local Gemma quality tests use `20000`. Observed complete-answer latency ranged from about 5 to 15.5 seconds, so the review-time timeout and model strategy remain unresolved.
+
+The current temporary Kakao deployment uses `20000` for quality testing. This is not yet compliant with the official PlayMCP operating requirement of average 100ms and p99 3,000ms, so latency is a submission blocker rather than a finished production setting.
 
 Do not commit `.env` or put the API token in the Docker image. Use PlayMCP in KC deployment secrets.
+
+`ALLOWED_ORIGINS` is a comma-separated allowlist for browser-originated MCP requests. It defaults to `https://playmcp.kakao.com`; requests without an `Origin` header remain supported for server-to-server MCP clients.
 
 ## Local Commands
 
@@ -106,3 +114,5 @@ HOST=127.0.0.1 PORT=3333 npm start
 This project is licensed under AGPL-3.0-only.
 
 The calculation core uses [`@orrery/core`](https://github.com/rath/orrery), also licensed under AGPL-3.0-only. Orrery provides the browser-first Saju, Zi Wei Dou Shu, and Western natal chart calculation logic that this MCP formats into an AI-readable context pack.
+
+The corresponding source for the deployed service is this public repository. The project does not claim ownership of Orrery's calculation algorithms or upstream third-party packages.

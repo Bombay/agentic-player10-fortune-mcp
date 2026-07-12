@@ -6,6 +6,7 @@ import { createMcpServer } from "./mcp/server.js";
 export type StartHttpServerOptions = {
   port: number;
   host?: string;
+  allowedOrigins?: readonly string[];
 };
 
 export type RunningHttpServer = {
@@ -17,7 +18,10 @@ export async function startHttpServer(
   options: StartHttpServerOptions,
 ): Promise<RunningHttpServer> {
   const host = options.host ?? "0.0.0.0";
-  const server = createServer(handleRequest);
+  const allowedOrigins = new Set(options.allowedOrigins ?? []);
+  const server = createServer((req, res) =>
+    handleRequest(req, res, allowedOrigins),
+  );
 
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
@@ -37,7 +41,11 @@ export async function startHttpServer(
   };
 }
 
-async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+async function handleRequest(
+  req: IncomingMessage,
+  res: ServerResponse,
+  allowedOrigins: ReadonlySet<string>,
+): Promise<void> {
   const path = new URL(req.url ?? "/", "http://localhost").pathname;
 
   if (path === "/healthz") {
@@ -52,6 +60,19 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     sendJson(res, 404, {
       ok: false,
       error: "not_found",
+    });
+    return;
+  }
+
+  const origin = req.headers.origin;
+  if (origin && !allowedOrigins.has(origin)) {
+    sendJson(res, 403, {
+      jsonrpc: "2.0",
+      error: {
+        code: -32000,
+        message: "Origin not allowed.",
+      },
+      id: null,
     });
     return;
   }
