@@ -209,10 +209,44 @@ Local `.env` keys:
 CLOUDFLARE_ACCOUNT_ID=...
 CLOUDFLARE_API_TOKEN=...
 CLOUDFLARE_AI_MODEL=@cf/google/gemma-4-26b-a4b-it
-CLOUDFLARE_AI_TIMEOUT_MS=2500
+CLOUDFLARE_AI_TIMEOUT_MS=60000
+CLOUDFLARE_AI_MAX_TOKENS=600
 ```
 
-Run `npm run benchmark:reading` to exercise both the generated-answer and guided-fallback paths. Three 2026-07-12 five-call samples at 2,500ms measured max 2,460-2,554ms and average 2,219-2,447ms. Do not raise the production timeout for answer quality: the fallback is the intended bounded behavior when Gemma is late.
+Run `npm run benchmark:reading` to exercise both the generated-answer and guided-fallback paths. The benchmark still uses PlayMCP's 3,000ms p99 requirement as its default latency budget, while the Workers AI request now waits up to 60,000ms for answer quality. A generated answer can therefore be valid while the benchmark correctly reports a PlayMCP latency-policy failure.
+
+PlayMCP AI Chat shows its built-in `TOOL call / loading` state while the tool is pending. The current public PlayMCP client does not expose custom MCP progress messages such as calculation and writing stages. Enabling Gemma thinking would add generation work without creating an earlier user-visible response, so thinking remains disabled.
+
+### Cerebras candidate
+
+The local benchmark supports a Cerebras-only generation path without changing the deployed MCP:
+
+```text
+CEREBRAS_API_KEY=...
+CEREBRAS_AI_MODEL=gpt-oss-120b
+CEREBRAS_AI_TIMEOUT_MS=2500
+CEREBRAS_AI_MAX_TOKENS=900
+```
+
+```bash
+npm run benchmark:reading:cerebras -- gpt-oss-120b 3000 2500 5 12500
+BENCHMARK_SCENARIOS=1 npm run benchmark:reading:cerebras -- gpt-oss-120b 3000 2500 3 12500
+```
+
+Measured on 2026-07-12:
+
+- Final Saju-only run: 5/5 grounded complete readings, 749ms average, 860ms maximum.
+- Cross-domain run: 3/3 grounded complete readings across Saju, Zi Wei Dou Shu, and Western astrology, 726ms average, 750ms maximum.
+- Unpaced burst testing reached HTTP 429 after the free account exceeded its displayed five-request-per-minute quota.
+- Free account limits shown in the console: 5 requests/minute, 150/hour, 2,400/day; 30,000 tokens/minute and 1,000,000 tokens/hour/day.
+- The candidate meets the measured 3,000ms p99 boundary but not the separate 100ms average target.
+
+Operational disclosure for the contest build:
+
+- The preliminary deployment intentionally uses the Cerebras free plan for judging, demos, and controlled testing.
+- Five requests per minute is not production capacity; burst traffic can return HTTP 429.
+- Upgrade the operator-owned account to paid inference capacity before finalist voting or general public exposure, then repeat concurrency testing.
+- Do not ask PlayMCP users to supply an API key, create an external account, or pay for inference.
 
 For PlayMCP in KC:
 

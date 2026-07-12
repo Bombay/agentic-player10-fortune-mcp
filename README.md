@@ -37,7 +37,7 @@ Build a personal counseling MCP that answers user concerns through:
 
 For the preliminary MVP, the product does not store the user's birth profile. The user provides birth information inside each tool call or conversation, and the server computes one AI-friendly context pack.
 
-The MCP calculates Saju, Zi Wei Dou Shu, and Western natal chart facts locally. It turns the structured calculation into short, question-scoped fact cards. When Workers AI credentials are configured, Cloudflare-hosted Gemma gets up to 2.5 seconds to write a complete Korean counseling answer. A timeout, provider error, or ungrounded output falls back to chart-specific interpretation rules plus verified facts so the host AI can finish the answer without losing the calculation.
+The MCP calculates Saju, Zi Wei Dou Shu, and Western natal chart facts locally. It turns the structured calculation into short, question-scoped fact cards. When Workers AI credentials are configured, Cloudflare-hosted Gemma gets up to 60 seconds and 600 output tokens to write a complete Korean counseling answer. A provider error, timeout, or ungrounded output falls back to chart-specific interpretation rules plus verified facts so the host AI can finish the answer without losing the calculation.
 
 Saved profiles, reminders, and repeat-visit personalization are finalist or later-version features.
 
@@ -90,7 +90,8 @@ Required variables:
 Optional variables:
 
 - `CLOUDFLARE_AI_MODEL` (default: `@cf/google/gemma-4-26b-a4b-it`)
-- `CLOUDFLARE_AI_TIMEOUT_MS` (default: `2500`)
+- `CLOUDFLARE_AI_TIMEOUT_MS` (default: `60000`)
+- `CLOUDFLARE_AI_MAX_TOKENS` (default: `600`)
 
 The hybrid benchmark runs five full reading calls and validates both the generated-answer and guided-fallback routes:
 
@@ -98,11 +99,32 @@ The hybrid benchmark runs five full reading calls and validates both the generat
 npm run benchmark:reading
 ```
 
-On 2026-07-12, three five-call runs at the 2.5-second deadline measured 2,460-2,554ms maximum and 2,219-2,447ms average, with one or two grounded Gemma answers per run and guided fallbacks for the remainder. The deployed Kakao endpoint returned a representative guided fallback in 2,625ms. These samples protect the documented 3,000ms p99 boundary, but they do not meet PlayMCP's separate 100ms average target.
+On 2026-07-12, three five-call runs at the former 2.5-second deadline measured 2,460-2,554ms maximum and 2,219-2,447ms average, with one or two grounded Gemma answers per run and guided fallbacks for the remainder. Later checks varied from a 2,570ms truncated completion to repeated timeouts beyond 30 seconds. With the 600-token budget, one grounded complete reading finished in 19,334ms. The product decision now favors waiting up to 60 seconds with the larger completion budget. PlayMCP already shows a generic `TOOL call / loading` state while the call is pending, but its public client does not expose custom MCP progress stages. This quality-first timeout does not satisfy PlayMCP's documented average 100ms and mandatory p99 3,000ms guidance, so it must be treated as a submission risk rather than a performance-compliant configuration.
 
 Current deployment: `https://fortune-reading-mcp-v2.playmcp-endpoint.kakaocloud.io/mcp` (`fortune-reading-mcp-v2`, ID `2844`, Active).
 
 Do not commit `.env` or put the API token in the Docker image. Use PlayMCP in KC deployment secrets.
+
+## Cerebras Evaluation
+
+The local evaluation path can replace only the final-answer generator with Cerebras `gpt-oss-120b`; the deterministic calculation, fact cards, and grounding checks remain unchanged. The deployed MCP still uses Cloudflare until the provider switch is explicitly approved and deployed.
+
+Local variables:
+
+- `CEREBRAS_API_KEY`
+- `CEREBRAS_AI_MODEL` (default: `gpt-oss-120b`)
+- `CEREBRAS_AI_TIMEOUT_MS` (default: `2500`)
+- `CEREBRAS_AI_MAX_TOKENS` (default: `900`)
+
+Run the free-tier-aware benchmark with at least 12 seconds between calls:
+
+```bash
+npm run benchmark:reading:cerebras -- gpt-oss-120b 3000 2500 5 12500
+```
+
+On 2026-07-12, the final five-call run produced five grounded complete readings with 749ms average and 860ms maximum latency. A three-scenario run covering Saju, Zi Wei Dou Shu, and Western astrology produced three grounded complete readings with 726ms average and 750ms maximum latency. The account's displayed free quota is five requests per minute, 150 per hour, 2,400 per day, and one million tokens per day. This clears PlayMCP's 3,000ms p99 boundary in the measured samples but not its separate 100ms average target.
+
+The contest preliminary build intentionally uses the Cerebras free plan to keep the validation MVP simple and cost-free. Its five-request-per-minute quota is suitable only for judging, demos, and low-volume testing; it is not presented as production capacity. If the project advances to public Kakao Tools voting or receives real user traffic, the operator must move to paid inference capacity before public exposure. End users are never asked to purchase or configure an LLM account.
 
 `ALLOWED_ORIGINS` is a comma-separated allowlist for browser-originated MCP requests. It defaults to `https://playmcp.kakao.com`; requests without an `Origin` header remain supported for server-to-server MCP clients.
 

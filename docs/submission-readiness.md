@@ -4,7 +4,7 @@ Checked: 2026-07-12
 
 ## Verdict
 
-The final hybrid server is deployed, connected to the existing PlayMCP draft, and verified end to end. It is technically ready to request PlayMCP review, with one explicit policy risk: measured calls stay below the 3,000ms p99 boundary but exceed the separate 100ms average target.
+The currently deployed bounded hybrid server is connected to the existing PlayMCP draft and verified end to end. The local quality-first revision now waits up to 60 seconds for Gemma and is not ready to replace production without accepting a direct conflict with PlayMCP's mandatory 3,000ms p99 requirement.
 
 The contest submission closes on 2026-07-14. Review takes up to seven business days and averages one to two days, so the latency decision and replacement deployment are urgent.
 
@@ -20,10 +20,11 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 | Naming policy | Pass | Server and Tool names do not contain `kakao` |
 | Text response format | Pass | Markdown `TextContent` |
 | Response size | Pass | Deterministic fallback measured 6,078 bytes, below the 24k limit |
-| Response latency | **Policy risk** | Three local samples: max 2,460-2,554ms; deployed sample 2,625ms; 100ms average target not met |
+| Response latency | **Candidate improves p99; average risk remains** | Cerebras final samples: 749ms average / 860ms max and 726ms average / 750ms max; below 3,000ms p99 but above the 100ms average target |
 | Origin validation | Pass | Deployed implementation rejects untrusted browser origins with HTTP 403 |
 | MCP Inspector | Pass | Both `tools/list` and `tools/call` succeeded against the deployed endpoint |
-| Automated tests | Pass | 7 files, 25 tests |
+| Automated tests | Pass | 8 files, 31 tests |
+| Preliminary capacity disclosure | Pass | Cerebras free plan is documented as judging/demo capacity only; paid operator capacity is required before public exposure |
 | TypeScript build | Pass | `npm run build` |
 | Linux AMD64 image | Pass | Docker image built successfully from a clean `npm ci` |
 | Container smoke test | Pass | `/healthz` and `/mcp` responded from the built image |
@@ -49,23 +50,35 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 
 ## Remaining decisions
 
-### Selected latency strategy
+### Selected latency candidate
 
-The local implementation now uses a bounded hybrid:
+The local implementation now contains two generation adapters, while the deployed server still uses Cloudflare:
 
-- Gemma 4 receives only verified fact cards and has a 2,500ms deadline.
-- A timeout, provider error, refusal, truncation, weak structure, wrong day master, scope leak, or unsupported claim switches to deterministic chart-specific interpretation guidance.
-- Guidance is generated from the current user's day master, ten gods, and relations; it no longer contains fixture-specific `甲木·偏財·自刑` rules.
-- Three five-call local runs measured max 2,460-2,554ms and average 2,219-2,447ms, with one or two complete Gemma answers per run and guided fallbacks for the remainder.
+- Cloudflare Gemma 4 is not suitable for the final path because complete readings varied from seconds to more than 30 seconds.
+- Cerebras `gpt-oss-120b` uses the same verified facts and grounding checks with a 2,500ms deadline and 900-token completion budget.
+- The final five-call Cerebras run achieved 5/5 complete readings at 749ms average and 860ms maximum.
+- A three-scenario run achieved 3/3 complete readings across Saju, Zi Wei Dou Shu, and Western astrology at 726ms average and 750ms maximum.
+- A provider error, timeout, weak structure, wrong day master, scope leak, or unsupported claim still switches to deterministic chart-specific guidance.
 
-Drop-in model replacement was rejected. Llama 3.2 3B was fast but changed the Four Pillars and produced an incomplete answer; Qwen3 returned no normal content in the initial run; Gemma 3 12B was unavailable to the account. The hybrid still does not meet the documented 100ms average target, so review risk remains and must be judged explicitly before submission.
+Cerebras is the selected local candidate for the next deployment. It clears the measured 3,000ms p99 boundary but still does not meet the documented 100ms average target, so review risk remains. The free account also permits only five requests per minute.
+
+### Preliminary capacity disclosure
+
+The contest MVP intentionally uses the Cerebras free plan to avoid unnecessary infrastructure cost during preliminary judging. This is a deliberate prototype constraint, not a production-capacity claim:
+
+- Free capacity is limited to five requests per minute and can return HTTP 429 during bursts.
+- The limit is acceptable for reviewer-driven demos and controlled PlayMCP testing only.
+- Before finalist public voting or general user exposure, the operator must upgrade to paid inference capacity and repeat load verification.
+- The service absorbs inference configuration and cost; users are not required to create or purchase an external LLM account.
 
 ## Remaining submission sequence
 
-1. Decide whether the remaining 100ms-average policy risk is acceptable, then request PlayMCP review immediately.
-2. Monitor the Kakao account email for approval or a correction request.
-3. After approval, change visibility from `나에게만 공개` to `전체 공개`.
-4. Submit the public PlayMCP detail URL through the contest form. The form can be submitted only once.
+1. Switch the MCP server factory from Cloudflare to the locally verified Cerebras adapter and run local end-to-end tests.
+2. Deploy the Cerebras preliminary version, update the existing PlayMCP draft in place, and verify AI Chat within the documented five-request-per-minute judging quota.
+3. Request PlayMCP review and monitor the Kakao account email for approval or a correction request.
+4. Before finalist or public exposure, upgrade to paid inference capacity and repeat concurrency and rate-limit tests.
+5. After approval, change visibility from `나에게만 공개` to `전체 공개`.
+6. Submit the public PlayMCP detail URL through the contest form. The form can be submitted only once.
 
 ## Official sources
 

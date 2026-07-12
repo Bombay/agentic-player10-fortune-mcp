@@ -1,6 +1,6 @@
 {
   "name": "agentic-player10-fortune-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "PlayMCP-compatible fortune context MCP for Saju, Zi Wei Dou Shu, and Western natal charts.",
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "benchmark:reading": "npm run build && node scripts/benchmark-reading.mjs",
+    "benchmark:reading:cerebras": "npm run build && READING_PROVIDER=cerebras node scripts/benchmark-reading.mjs",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run"

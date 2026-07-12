@@ -149,12 +149,23 @@ Secured Gemma deployment result on 2026-07-12:
 - Cloudflare states that Workers AI Customer Content is not used to train models or improve Cloudflare or third-party services without explicit consent.
 - The tool sets `openWorldHint: true` because it calls an external service.
 - The tool sets `idempotentHint: false` because generated wording can vary.
-- The selected local architecture is a bounded hybrid: Gemma 4 gets a 2,500ms deadline, then the MCP returns chart-specific interpretation guidance plus verified facts if generation is late or unsafe.
-- Three five-call local runs on 2026-07-12 measured max 2,460-2,554ms and average 2,219-2,447ms, with one or two grounded Gemma answers per run and guided fallbacks for the remainder. All samples stayed under the mandatory 3,000ms p99 boundary but did not meet the separate 100ms average target.
-- The deployed `v2` server uses the 2,500ms deadline. A representative direct Tool call returned the guided fallback in 2,625ms; initialize took 123ms and `tools/list` took 48ms.
+- The selected local architecture is a quality-first hybrid: Gemma 4 gets a 60,000ms deadline and 600 output tokens so a complete reading is preferred, then the MCP returns chart-specific interpretation guidance plus verified facts only if generation fails or remains late beyond that bound.
+- Three five-call local runs on 2026-07-12 at the former 2,500ms deadline measured max 2,460-2,554ms and average 2,219-2,447ms, with one or two grounded Gemma answers per run and guided fallbacks for the remainder. Those historical samples stayed under the mandatory 3,000ms p99 boundary but did not meet the separate 100ms average target.
+- The currently deployed `v2` server still uses the former 2,500ms environment setting until a replacement deployment is verified. A representative direct Tool call returned the guided fallback in 2,625ms; initialize took 123ms and `tools/list` took 48ms.
+- PlayMCP AI Chat exposes one generic `TOOL call / loading` state during execution. Its current public client does not render custom MCP progress stages, so enabling model thinking cannot produce an earlier visible response.
+- Additional 2026-07-12 checks showed high provider variance: three 10,000ms timeouts, one 30,000ms timeout, and one 2,570ms response that reached the former 360-token completion limit. With the 600-token budget, a grounded four-section reading completed successfully in 19,334ms. This is why both timeout and output budget must be raised to prioritize Gemma completion.
+- The quality-first 60,000ms configuration conflicts with PlayMCP's documented mandatory p99 3,000ms requirement and is not performance-compliant for review unless generation latency is reduced.
+- A separate Cerebras `gpt-oss-120b` candidate was evaluated on 2026-07-12 with the same deterministic facts and grounding validation. The final five-call Saju run achieved 5/5 complete generated readings at 749ms average and 860ms maximum. A three-scenario Saju/Zi Wei/Western run achieved 3/3 at 726ms average and 750ms maximum.
+- The Cerebras free account displayed limits of 5 requests/minute, 150/hour, 2,400/day, and 1,000,000 tokens/day. Unpaced calls reproduced HTTP 429, while 12.5-second spacing avoided it.
+- Contest capacity disclosure: the preliminary MVP intentionally uses the free plan for judging and demonstration only. Five requests per minute is not sufficient for general public operation. Before finalist voting or any public traffic, upgrade the operator-owned inference account to paid capacity; users must never be asked to provide or pay for an LLM account.
+- Cerebras solves the measured 3,000ms p99 problem but still exceeds PlayMCP's separate 100ms average target. It remains a local candidate until the provider switch is approved and deployed.
 - Drop-in model checks did not solve both constraints: Llama 3.2 3B changed the calculated Four Pillars despite 1.6s latency; Qwen3 initially returned no normal content; Gemma 3 12B was unavailable to the account.
 - Timeout, non-success response, empty output, truncated completion, refusal, weak structure, a changed day master, scope leakage, or unsupported certainty triggers the guided deterministic fallback.
 - The fallback derives day-master, ten-god, relation, Zi Wei, and Western interpretation rules from the current fact cards. It contains no fixed fixture interpretation.
+
+### 공모전 제출용 운영 한도 안내 문구
+
+> 본 출품작은 예선 심사와 기능 검증을 위한 MVP로, 현재 운영자 소유의 Cerebras 무료 추론 플랜을 사용합니다. 무료 플랜은 분당 5회 호출로 제한되어 심사·데모·저용량 테스트 용도에만 적합하며, 실제 공개 운영 용량을 의미하지 않습니다. 본선 공개 투표 또는 일반 사용자 공개 전에는 운영자가 유료 추론 용량으로 전환하고 동시 호출 테스트를 다시 수행할 예정입니다. 사용자는 외부 LLM 계정이나 API 키를 준비하거나 비용을 결제할 필요가 없습니다.
 - PlayMCP in KC deployment must inject `CLOUDFLARE_API_TOKEN` as a secret. It must never be committed or embedded in the container image.
 
 ## Personal Data and Storage Assumptions

@@ -116,6 +116,24 @@ describe("isUsableReading", () => {
     );
   });
 
+  it("accepts a concise four-section reading that still has useful detail", () => {
+    const section =
+      "계산 근거를 쉬운 의미와 현실적인 선택으로 연결하고, 미래는 가능성으로 설명합니다. ".repeat(3);
+    const reading = [
+      "### 타고난 구조",
+      section,
+      "### 내면 성향",
+      section,
+      "### 현재 운의 흐름",
+      section,
+      "### 현실 조언",
+      section,
+    ].join("\n\n");
+
+    expect(reading.length).toBeGreaterThanOrEqual(400);
+    expect(isUsableReading(reading)).toBe(true);
+  });
+
 });
 
 describe("isGroundedReading", () => {

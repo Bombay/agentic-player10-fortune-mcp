@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
 import { generateFortuneReading } from "../domain/fortune-reading.js";
-import { createCloudflareReadingGeneratorFromEnv } from "../llm/cloudflare-workers-ai.js";
+import { createReadingGeneratorFromEnv } from "../llm/reading-generator-factory.js";
 
 export const fortuneInputSchema = {
   year: z.number().int().min(1900).max(2100).describe("Birth year in Gregorian calendar."),
@@ -46,7 +46,7 @@ export const toolDefinition = {
 export function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "agentic-player10-fortune-context",
-    version: "0.2.0",
+    version: "0.3.0",
   });
 
   server.registerTool(
@@ -59,7 +59,7 @@ export function createMcpServer(): McpServer {
     },
     async (input) => {
       const text = await generateFortuneReading(input, {
-        generator: createCloudflareReadingGeneratorFromEnv(),
+        generator: createReadingGeneratorFromEnv(),
       });
 
       return {

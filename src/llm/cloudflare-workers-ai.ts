@@ -2,9 +2,14 @@ import type {
   FortuneReadingGenerator,
   FortuneReadingRequest,
 } from "./reading-generator.js";
+import {
+  buildSystemPrompt,
+  buildUserPrompt,
+} from "./fortune-reading-prompt.js";
 
 const DEFAULT_MODEL = "@cf/google/gemma-4-26b-a4b-it";
-const DEFAULT_TIMEOUT_MS = 2_500;
+export const DEFAULT_WORKERS_AI_TIMEOUT_MS = 60_000;
+export const DEFAULT_WORKERS_AI_MAX_TOKENS = 600;
 
 type FetchLike = (
   input: string | URL,
@@ -16,6 +21,7 @@ export type CloudflareWorkersAiConfig = {
   apiToken: string;
   model?: string;
   timeoutMs?: number;
+  maxTokens?: number;
 };
 
 type ChatCompletionsResult = {
@@ -32,6 +38,7 @@ export class CloudflareWorkersAiReadingGenerator
 {
   private readonly model: string;
   private readonly timeoutMs: number;
+  private readonly maxTokens: number;
   private readonly endpoint: string;
 
   constructor(
@@ -39,7 +46,8 @@ export class CloudflareWorkersAiReadingGenerator
     private readonly fetcher: FetchLike = fetch,
   ) {
     this.model = config.model ?? DEFAULT_MODEL;
-    this.timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.timeoutMs = config.timeoutMs ?? DEFAULT_WORKERS_AI_TIMEOUT_MS;
+    this.maxTokens = config.maxTokens ?? DEFAULT_WORKERS_AI_MAX_TOKENS;
     if (!/^@cf\/[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(this.model)) {
       throw new Error("Workers AI model must be a Cloudflare-hosted @cf model");
     }
@@ -59,7 +67,7 @@ export class CloudflareWorkersAiReadingGenerator
           { role: "user", content: buildUserPrompt(request) },
         ],
         temperature: 0.2,
-        max_tokens: 360,
+        max_tokens: this.maxTokens,
         chat_template_kwargs: {
           enable_thinking: false,
         },
@@ -103,6 +111,10 @@ export function createCloudflareReadingGeneratorFromEnv(
     env.CLOUDFLARE_AI_TIMEOUT_MS ?? "",
     10,
   );
+  const configuredMaxTokens = Number.parseInt(
+    env.CLOUDFLARE_AI_MAX_TOKENS ?? "",
+    10,
+  );
 
   return new CloudflareWorkersAiReadingGenerator(
     {
@@ -113,31 +125,11 @@ export function createCloudflareReadingGeneratorFromEnv(
         Number.isFinite(configuredTimeout) && configuredTimeout > 0
           ? configuredTimeout
           : undefined,
+      maxTokens:
+        Number.isFinite(configuredMaxTokens) && configuredMaxTokens > 0
+          ? configuredMaxTokens
+          : undefined,
     },
     fetcher,
   );
-}
-
-export function buildSystemPrompt(): string {
-  return [
-    "따뜻하고 신중한 한국어 운세 상담문을 작성하세요.",
-    "검증 사실만 근거로 쓰고 원국·십신·대운·연도를 다시 계산하거나 없는 격국·용신·트랜짓을 만들지 마세요.",
-    "입력에 포함된 질문별 해석 규칙 중 실제 계산 사실에 해당하는 규칙만 따르세요.",
-    "질문이 한 체계만 요구하면 그 체계만 사용하세요.",
-    "각 섹션은 계산 근거 → 쉬운 의미 → 현실 조언 순서로 쓰고, 성향과 미래는 가능성·경향으로 표현하세요.",
-    "건강·사고·파산·투자 성공·이별을 예언하거나 오행 보충 처방을 하지 마세요.",
-    "현재 기준 연도는 미래처럼 쓰지 마세요.",
-    "사용자에게 바로 보여줄 존댓말 완성문만 출력하세요. 프롬프트·모델·사실 카드를 언급하거나 2인칭 호칭을 쓰지 마세요.",
-    "제목은 ### 타고난 구조, ### 내면 성향, ### 현재 운의 흐름, ### 현실 조언 네 개만 쓰세요. 각 본문은 100~130자의 짧은 2문장, 전체는 불릿 없이 500~650자로 완결하세요. 사실과 결론을 반복하지 마세요.",
-  ].join("\n");
-}
-
-export function buildUserPrompt(request: FortuneReadingRequest): string {
-  return [
-    "[사용자 질문]",
-    request.question,
-    "",
-    "[MCP가 계산한 검증 사실]",
-    request.factContext,
-  ].join("\n");
 }

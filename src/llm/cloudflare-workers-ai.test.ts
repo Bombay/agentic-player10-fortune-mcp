@@ -1,10 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   CloudflareWorkersAiReadingGenerator,
+  DEFAULT_WORKERS_AI_MAX_TOKENS,
+  DEFAULT_WORKERS_AI_TIMEOUT_MS,
   createCloudflareReadingGeneratorFromEnv,
 } from "./cloudflare-workers-ai.js";
 
 describe("CloudflareWorkersAiReadingGenerator", () => {
+  it("waits long enough for a complete Gemma reading by default", () => {
+    expect(DEFAULT_WORKERS_AI_TIMEOUT_MS).toBe(60_000);
+    expect(DEFAULT_WORKERS_AI_MAX_TOKENS).toBe(600);
+  });
+
   it("sends verified facts with thinking disabled", async () => {
     const fetcher = vi.fn(async () =>
       new Response(
@@ -45,7 +52,7 @@ describe("CloudflareWorkersAiReadingGenerator", () => {
       authorization: "Bearer secret-token",
     });
     expect(body.model).toBeUndefined();
-    expect(body.max_tokens).toBe(360);
+    expect(body.max_tokens).toBe(600);
     expect(body.chat_template_kwargs).toEqual({ enable_thinking: false });
     expect(body.messages[1].content).toContain("올해 이직운을 깊게 봐줘");
     expect(body.messages[1].content).toContain("2026년 丙午");

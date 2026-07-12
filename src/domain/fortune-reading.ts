@@ -68,7 +68,7 @@ export function isUsableReading(reading: string): boolean {
   const headings = normalized.match(/^#{2,3}\s+.+$/gm)?.length ?? 0;
 
   return (
-    normalized.length >= 450 &&
+    normalized.length >= 400 &&
     normalized.length <= 8_000 &&
     headings >= 3 &&
     !refusalPatterns.some((pattern) => normalized.includes(pattern))
