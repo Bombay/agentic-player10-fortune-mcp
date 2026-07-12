@@ -73,6 +73,17 @@ Redeployment result on 2026-07-05:
 - The PlayMCP developer console temporary registration was updated, information-loaded, and saved against the current endpoint.
 - PlayMCP AI Chat successfully called `generate_fortune_context` and generated a career-change reading from an English-birthplace prompt.
 
+Secured Gemma deployment result on 2026-07-12:
+
+- Current PlayMCP developer console endpoint: `https://fortune-reading-mcp.playmcp-endpoint.kakaocloud.io/mcp`
+- Current Gemma-enabled PlayMCP in KC server: `fortune-reading-mcp`, ID `2789`, status `Active`.
+- `CLOUDFLARE_API_TOKEN` is configured only in the dedicated PlayMCP in KC secret field. GitHub Secrets are not used because GitHub Actions is not the runtime or deployment executor.
+- The model request contains the user's question and deterministic fortune fact cards, but never the Cloudflare token. The token is used only as the Cloudflare HTTP authorization header.
+- Direct endpoint verification and PlayMCP AI Chat verification both succeeded.
+- PlayMCP AI Chat passed `question` correctly and stayed within the requested Saju-only scope.
+- The Kakao host LLM shortened some of the completed tool answer even though the response said not to summarize. This is a confirmed host-model limitation, not a missing calculation or Gemma-generation failure.
+- `fortune-context-mcp-v3` remains active only as rollback until the new deployment is considered stable.
+
 ## MCP Protocol Constraints
 
 - Remote MCP server only.
