@@ -149,12 +149,12 @@ Secured Gemma deployment result on 2026-07-12:
 - Cloudflare states that Workers AI Customer Content is not used to train models or improve Cloudflare or third-party services without explicit consent.
 - The tool sets `openWorldHint: true` because it calls an external service.
 - The tool sets `idempotentHint: false` because generated wording can vary.
-- The code default remains a 2,800ms deadline to protect the PlayMCP response path, but Gemma 4 did not complete a rich answer within that budget.
-- Local fact-card tests with thinking disabled observed complete-answer latency from about 5 to 15.5 seconds. Local quality testing therefore uses a 20,000ms timeout.
-- Do not request preliminary review until the latency strategy is explicitly decided. Options include deterministic responses, a redesigned short generation path, or knowingly accepting the review risk of a longer response.
-- The temporary 2026-07-12 deployment uses a 20,000ms timeout and returned complete answers in about 8.9 to 12.1 seconds. PlayMCP AI Chat tolerated the call, but this does not satisfy the documented operating requirement and remains a preliminary-review blocker.
-- Drop-in model checks did not solve both constraints: GLM-4.7-Flash took about 8.8 seconds for a complete answer, while Llama 3.1 8B Fast took about 3.5 seconds and produced materially weaker Korean interpretation.
-- Timeout, non-success response, empty output, truncated completion, refusal, fewer than three Markdown sections, or output shorter than 700 characters triggers the deterministic fallback.
+- The selected local architecture is a bounded hybrid: Gemma 4 gets a 2,500ms deadline, then the MCP returns chart-specific interpretation guidance plus verified facts if generation is late or unsafe.
+- Three five-call local runs on 2026-07-12 measured max 2,460-2,554ms and average 2,219-2,447ms, with one or two grounded Gemma answers per run and guided fallbacks for the remainder. All samples stayed under the mandatory 3,000ms p99 boundary but did not meet the separate 100ms average target.
+- The currently deployed 2026-07-12 server still uses the old 20,000ms timeout and returned answers in about 8.9 to 12.1 seconds. It must be replaced before review.
+- Drop-in model checks did not solve both constraints: Llama 3.2 3B changed the calculated Four Pillars despite 1.6s latency; Qwen3 initially returned no normal content; Gemma 3 12B was unavailable to the account.
+- Timeout, non-success response, empty output, truncated completion, refusal, weak structure, a changed day master, scope leakage, or unsupported certainty triggers the guided deterministic fallback.
+- The fallback derives day-master, ten-god, relation, Zi Wei, and Western interpretation rules from the current fact cards. It contains no fixed fixture interpretation.
 - PlayMCP in KC deployment must inject `CLOUDFLARE_API_TOKEN` as a secret. It must never be committed or embedded in the container image.
 
 ## Personal Data and Storage Assumptions

@@ -199,7 +199,7 @@ Behavior:
 - Converts the structured result into deterministic fact cards selected by the user's question.
 - When Cloudflare credentials are configured, generates one complete Korean counseling answer with Workers AI Gemma.
 - Sends the fact cards and current question, but excludes the full chart dump and direct birth-input summary from the external request.
-- Falls back to the original Markdown context pack on timeout, provider error, refusal, or weak output.
+- Falls back to chart-specific interpretation guidance plus verified facts on timeout, provider error, refusal, or weak or ungrounded output.
 - Does not store birth information.
 
 ## Workers AI Configuration
@@ -210,10 +210,10 @@ Local `.env` keys:
 CLOUDFLARE_ACCOUNT_ID=...
 CLOUDFLARE_API_TOKEN=...
 CLOUDFLARE_AI_MODEL=@cf/google/gemma-4-26b-a4b-it
-CLOUDFLARE_AI_TIMEOUT_MS=2800
+CLOUDFLARE_AI_TIMEOUT_MS=2500
 ```
 
-For local quality testing, override `CLOUDFLARE_AI_TIMEOUT_MS=20000`. Observed Gemma 4 completion time was approximately 5 to 15.5 seconds. Keep the production value unresolved until a faster model or PlayMCP-tolerated timeout is confirmed.
+Run `npm run benchmark:reading` to exercise both the generated-answer and guided-fallback paths. Three 2026-07-12 five-call samples at 2,500ms measured max 2,460-2,554ms and average 2,219-2,447ms. Do not raise the production timeout for answer quality: the fallback is the intended bounded behavior when Gemma is late.
 
 For PlayMCP in KC:
 

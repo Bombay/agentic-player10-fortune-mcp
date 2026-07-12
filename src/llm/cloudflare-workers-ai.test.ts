@@ -9,12 +9,14 @@ describe("CloudflareWorkersAiReadingGenerator", () => {
     const fetcher = vi.fn(async () =>
       new Response(
         JSON.stringify({
-          choices: [
-            {
-              finish_reason: "stop",
-              message: { content: "## 전체 요약\n충분히 긴 상담 결과" },
-            },
-          ],
+          result: {
+            choices: [
+              {
+                finish_reason: "stop",
+                message: { content: "## 전체 요약\n충분히 긴 상담 결과" },
+              },
+            ],
+          },
         }),
         { status: 200 },
       ),
@@ -36,14 +38,15 @@ describe("CloudflareWorkersAiReadingGenerator", () => {
     const [url, init] = fetcher.mock.calls[0];
     const body = JSON.parse(String(init?.body));
 
-    expect(String(url)).toContain("accounts/account-id/ai/v1/chat/completions");
+    expect(String(url)).toContain(
+      "accounts/account-id/ai/run/@cf/google/gemma-4-26b-a4b-it",
+    );
     expect(init?.headers).toMatchObject({
       authorization: "Bearer secret-token",
     });
-    expect(body.model).toBe("@cf/google/gemma-4-26b-a4b-it");
-    expect(body.max_completion_tokens).toBe(1250);
+    expect(body.model).toBeUndefined();
+    expect(body.max_tokens).toBe(360);
     expect(body.chat_template_kwargs).toEqual({ enable_thinking: false });
-    expect(body.store).toBe(false);
     expect(body.messages[1].content).toContain("올해 이직운을 깊게 봐줘");
     expect(body.messages[1].content).toContain("2026년 丙午");
     expect(body.messages[1].content).toContain("현재 대운 庚申");
@@ -78,12 +81,14 @@ describe("CloudflareWorkersAiReadingGenerator", () => {
       async () =>
         new Response(
           JSON.stringify({
-            choices: [
-              {
-                finish_reason: "length",
-                message: { content: "## 미완성\n중간에서 잘린 답변" },
-              },
-            ],
+            result: {
+              choices: [
+                {
+                  finish_reason: "length",
+                  message: { content: "## 미완성\n중간에서 잘린 답변" },
+                },
+              ],
+            },
           }),
           { status: 200 },
         ),
@@ -93,4 +98,5 @@ describe("CloudflareWorkersAiReadingGenerator", () => {
       generator.generate({ question: "전체 운세", factContext: "facts" }),
     ).rejects.toThrow("completion budget");
   });
+
 });

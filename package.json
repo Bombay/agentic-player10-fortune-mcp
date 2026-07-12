@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "benchmark:reading": "npm run build && node scripts/benchmark-reading.mjs",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run"

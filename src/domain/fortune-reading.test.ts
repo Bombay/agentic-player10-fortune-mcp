@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { FortuneReadingGenerator } from "../llm/reading-generator.js";
-import { generateFortuneReading, isUsableReading } from "./fortune-reading.js";
+import {
+  generateFortuneReading,
+  isGroundedReading,
+  isUsableReading,
+} from "./fortune-reading.js";
+import { formatInterpretationGuidance } from "./fortune-guidance.js";
 
 const birthInput = {
   year: 1988,
@@ -21,7 +26,7 @@ function detailedReading(): string {
     "## 일과 돈",
     "破軍과 七殺의 흐름은 정답이 없는 문제를 재구성할 때 강점이 살아난다는 뜻입니다.",
     "## 현재 흐름",
-    "현재 庚申 대운에는 책임과 권한이 함께 커지므로 역할과 기준을 명확히 정하는 것이 중요합니다.",
+    "현재 庚申 대운에는 책임과 권한이 함께 커지고, 2026년에는 역할과 기준을 명확히 정하는 것이 중요합니다.",
     "## 실천 조언",
     "기회를 모두 잡기보다 한두 가지를 선별하고, 돈과 일정의 규칙을 문서로 만들어 부담을 나누세요.",
     "이 설명은 계산 근거를 일상적인 선택에 연결한 것입니다. 중요한 결정을 운세 하나로 단정하지 말고 현실 조건과 함께 살펴보세요.",
@@ -50,6 +55,8 @@ describe("generateFortuneReading", () => {
 
     const request = generate.mock.calls[0][0];
     expect(request.question).toBe("올해 일과 돈을 자세히 봐줘");
+    expect(request.factContext).toContain("# 질문별 해석 규칙");
+    expect(request.factContext).toContain("甲木 일간");
     expect(request.factContext).toContain("# 검증된 사주 사실");
     expect(request.factContext).toContain("현재 대운: 2023년 시작 庚申");
     expect(request.factContext).not.toContain("생년월일시");
@@ -64,8 +71,32 @@ describe("generateFortuneReading", () => {
 
     const text = await generateFortuneReading(birthInput, { generator });
 
-    expect(text).toContain("# AI 상담 지침");
-    expect(text).toContain("四柱八字 (男)");
+    expect(text).toContain("# AI 답변 지침");
+    expect(text).toContain("# 질문별 해석 규칙");
+    expect(text).toContain("甲木 일간");
+    expect(text).toContain("偏財:");
+    expect(text).toContain("# 검증된 사주 사실");
+    expect(text).not.toContain("# 입력 요약");
+    expect(text).not.toContain("출생지: 서울");
+  });
+});
+
+describe("formatInterpretationGuidance", () => {
+  it("derives guidance from the current chart instead of leaking fixture rules", () => {
+    const guidance = formatInterpretationGuidance([
+      "# 검증된 사주 사실",
+      "- 일간: 丙火",
+      "- 천간 십신: 시주 正官, 일주 本元, 월주 正印, 년주 劫財",
+      "- 원국 합·충·형·파·해: 지지 沖 1쌍",
+      "- 현재 대운: 2023년 시작 壬子, 천간 偏官, 지지 正官",
+    ].join("\n"));
+
+    expect(guidance).toContain("丙火 일간");
+    expect(guidance).toContain("偏官:");
+    expect(guidance).toContain("충은");
+    expect(guidance).not.toContain("甲木");
+    expect(guidance).not.toContain("偏財:");
+    expect(guidance).not.toContain("자형은");
   });
 });
 
@@ -85,4 +116,18 @@ describe("isUsableReading", () => {
     );
   });
 
+});
+
+describe("isGroundedReading", () => {
+  it("rejects a structured answer that changes the day master", () => {
+    const facts = [
+      "# 검증 범위",
+      "- 질문 범위: 사주팔자만 해석. 자미두수와 서양 점성술은 언급 금지",
+      "# 검증된 사주 사실",
+      "- 일간: 甲木",
+    ].join("\n");
+    const wrong = detailedReading().replace("甲木", "丙火");
+
+    expect(isGroundedReading(wrong, facts, "사주만 봐줘")).toBe(false);
+  });
 });

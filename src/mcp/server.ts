@@ -32,7 +32,7 @@ export const toolDefinition = {
   name: "generate_fortune_context",
   title: "Generate Fortune Context",
   description:
-    "Fortune Counsel(사주 점성술 상담) generates a complete Korean fortune reading from Saju/Four Pillars, Zi Wei Dou Shu, and Western natal chart calculations. Use it for fortune, personality, career, money, relationship, or timing questions. Birthplace is required; ask before calling. Copy the user's latest request into question. The returned 상담 결과 is already the final user-facing answer: deliver it fully without summarizing, shortening, or adding another interpretation.",
+    "Fortune Counsel(사주 점성술 상담) generates a Korean fortune reading from Saju/Four Pillars, Zi Wei Dou Shu, and Western natal chart calculations. Use it for fortune, personality, career, money, relationship, or timing questions. Birthplace is required; ask before calling. Copy the user's latest request into question. If the response contains 상담 결과, it is the final user-facing answer: deliver it fully without summarizing or adding another interpretation. If it contains AI 답변 지침 and verified facts, write the final answer exactly as instructed without asking for the birth information again.",
   inputSchema: fortuneInputSchema,
   annotations: {
     title: "Generate Fortune Context",
