@@ -153,6 +153,17 @@ Current hybrid deployment state observed on 2026-07-12:
 - The existing temporary PlayMCP developer-console registration was edited in place, refreshed from the new endpoint, and saved. A second temporary MCP registration was not created.
 - PlayMCP AI Chat passed the original question through the optional `question` argument, called `v2`, and produced a four-section grounded answer without asking for birthplace again.
 
+Current Cerebras preliminary deployment state observed on 2026-07-12:
+
+- Git commit `b095887` was pushed to the public GitHub `main` branch.
+- Active endpoint: `https://fortune-reading-mcp-v3.playmcp-endpoint.kakaocloud.io/mcp`
+- PlayMCP in KC server: `fortune-reading-mcp-v3`, ID `2867`, status `Active`.
+- Runtime configuration uses `FORTUNE_READING_PROVIDER=cerebras`, `CEREBRAS_AI_MODEL=gpt-oss-120b`, `CEREBRAS_AI_TIMEOUT_MS=2500`, and `CEREBRAS_AI_MAX_TOKENS=900`.
+- `CEREBRAS_API_KEY` is injected through the separate PlayMCP in KC secret field and is absent from Git and image layers.
+- Direct verification succeeded: initialize 194ms, `tools/list` 68ms, and a complete Saju-only `tools/call` 1,012ms. The server reported version `0.3.0`.
+- The existing temporary PlayMCP registration was edited in place, information-loaded, and saved against v3. AI Chat passed the current question and birth arguments, then delivered all four sections from `# 상담 결과` without mentioning other requested-to-exclude systems.
+- The previous v2 server was deleted after verification. KakaoCloud now has one active server, v3.
+
 ## KakaoTalk / Kakao Tools Test Path
 
 Current official text indicates:
@@ -196,7 +207,7 @@ Behavior:
 
 - Calculates Saju, Zi Wei Dou Shu, and Western natal chart data locally.
 - Converts the structured result into deterministic fact cards selected by the user's question.
-- When Cloudflare credentials are configured, generates one complete Korean counseling answer with Workers AI Gemma.
+- With the deployed Cerebras configuration, generates one complete Korean counseling answer with `gpt-oss-120b`.
 - Sends the fact cards and current question, but excludes the full chart dump and direct birth-input summary from the external request.
 - Falls back to chart-specific interpretation guidance plus verified facts on timeout, provider error, refusal, or weak or ungrounded output.
 - Does not store birth information.
@@ -217,9 +228,9 @@ Run `npm run benchmark:reading` to exercise both the generated-answer and guided
 
 PlayMCP AI Chat shows its built-in `TOOL call / loading` state while the tool is pending. The current public PlayMCP client does not expose custom MCP progress messages such as calculation and writing stages. Enabling Gemma thinking would add generation work without creating an earlier user-visible response, so thinking remains disabled.
 
-### Cerebras candidate
+### Cerebras deployment
 
-The local benchmark supports a Cerebras-only generation path without changing the deployed MCP:
+The local benchmark and deployed MCP use the same Cerebras generation path:
 
 ```text
 CEREBRAS_API_KEY=...
@@ -250,10 +261,10 @@ Operational disclosure for the contest build:
 
 For PlayMCP in KC:
 
-1. Add `CLOUDFLARE_ACCOUNT_ID` as an environment variable.
-2. Add `CLOUDFLARE_API_TOKEN` as a secret.
-3. Optionally add the model and timeout variables.
-4. Never place the token in Git, `.env.example`, Docker build arguments, or image layers.
+1. Add `FORTUNE_READING_PROVIDER=cerebras` as an environment variable.
+2. Add `CEREBRAS_API_KEY` as a secret.
+3. Add the model, timeout, and output-token variables shown above.
+4. Never place the key in Git, `.env.example`, Docker build arguments, or image layers.
 5. Verify both the final-answer path and the fallback path before replacing the current endpoint.
 
 ## License Note

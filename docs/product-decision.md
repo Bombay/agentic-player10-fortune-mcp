@@ -72,11 +72,11 @@ The demo is emotionally legible:
 
 PlayMCP AI Chat tests showed that the host model summarizes raw chart data too aggressively. It produced acceptable delivery only when the tool response already contained a complete final draft.
 
-The current architecture therefore keeps the calculation deterministic but uses Cloudflare Workers AI Gemma as a replaceable final-answer generator:
+The current architecture therefore keeps the calculation deterministic and uses Cerebras `gpt-oss-120b` as the deployed, replaceable final-answer generator. Cloudflare Workers AI remains an optional comparison adapter:
 
 1. Calculate the three chart systems locally.
 2. Convert structured results into deterministic, question-scoped fact cards.
-3. Send only the fact cards and current question to Gemma; do not send the full chart dump or direct birth-input summary.
+3. Send only the fact cards and current question to the selected generator; do not send the full chart dump or direct birth-input summary.
 4. Reject short, refused, malformed, or slow output.
 5. Return the complete answer with an instruction for the host to deliver it verbatim.
 6. Fall back to the deterministic context pack when the generator is unavailable.

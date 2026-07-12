@@ -4,7 +4,7 @@ Checked: 2026-07-12
 
 ## Verdict
 
-The currently deployed bounded hybrid server is connected to the existing PlayMCP draft and verified end to end. The local quality-first revision now waits up to 60 seconds for Gemma and is not ready to replace production without accepting a direct conflict with PlayMCP's mandatory 3,000ms p99 requirement.
+The Cerebras-backed preliminary server is deployed, connected to the existing PlayMCP draft, and verified end to end. It produced complete grounded readings within the measured 3,000ms p99 boundary, while still exceeding PlayMCP's separate 100ms average target.
 
 The contest submission closes on 2026-07-14. Review takes up to seven business days and averages one to two days, so the latency decision and replacement deployment are urgent.
 
@@ -12,18 +12,18 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 
 | Area | Status | Evidence |
 | --- | --- | --- |
-| Kakao Cloud deployment | Pass | `fortune-reading-mcp-v2`, ID `2844`, Active; only one server remains |
-| Public Streamable HTTP endpoint | Pass | `https://fortune-reading-mcp-v2.playmcp-endpoint.kakaocloud.io/mcp` |
+| Kakao Cloud deployment | Pass | `fortune-reading-mcp-v3`, ID `2867`, Active; only one server remains |
+| Public Streamable HTTP endpoint | Pass | `https://fortune-reading-mcp-v3.playmcp-endpoint.kakaocloud.io/mcp` |
 | Supported MCP protocol | Pass | PlayMCP information loading and official MCP Inspector CLI succeeded |
 | Working Tool count | Pass | One Tool; review policy requires at least one |
 | Tool metadata | Pass | `name`, `description`, `inputSchema`, and all five annotations present |
 | Naming policy | Pass | Server and Tool names do not contain `kakao` |
 | Text response format | Pass | Markdown `TextContent` |
 | Response size | Pass | Deterministic fallback measured 6,078 bytes, below the 24k limit |
-| Response latency | **Candidate improves p99; average risk remains** | Cerebras final samples: 749ms average / 860ms max and 726ms average / 750ms max; below 3,000ms p99 but above the 100ms average target |
+| Response latency | **Measured p99 passes; average risk remains** | Cerebras samples: 749ms average / 860ms max and 726ms average / 750ms max; deployed Saju call 1,012ms; below 3,000ms p99 but above the 100ms average target |
 | Origin validation | Pass | Deployed implementation rejects untrusted browser origins with HTTP 403 |
 | MCP Inspector | Pass | Both `tools/list` and `tools/call` succeeded against the deployed endpoint |
-| Automated tests | Pass | 8 files, 31 tests |
+| Automated tests | Pass | 9 files, 35 tests |
 | Preliminary capacity disclosure | Pass | Cerebras free plan is documented as judging/demo capacity only; paid operator capacity is required before public exposure |
 | TypeScript build | Pass | `npm run build` |
 | Linux AMD64 image | Pass | Docker image built successfully from a clean `npm ci` |
@@ -31,11 +31,11 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 | Dependency vulnerabilities | Pass | `npm audit --omit=dev`: 0 vulnerabilities |
 | Repository visibility | Pass | Public GitHub repository, default branch `main` |
 | License and data rights | Pass with note | AGPL-3.0-only; Orrery attribution and source link documented |
-| Secret handling | Pass | Cloudflare token exists only in the PlayMCP in KC secret field and local ignored `.env` |
-| Secret history scan | Pass | No Cloudflare token pattern found in Git history |
-| Personal data storage | Pass | Birth inputs are not persisted; raw inputs are not sent to Workers AI |
+| Secret handling | Pass | Cerebras key exists only in the PlayMCP in KC secret field and local ignored `.env`; the superseded key was revoked |
+| Secret history scan | Pass | No Cerebras key pattern found in tracked source or Git history |
+| Personal data storage | Pass | Birth inputs are not persisted; raw inputs are not sent to Cerebras |
 | Representative image | Pass | Static 600x600 PNG, appropriate to the service |
-| PlayMCP temporary registration | Pass | Existing registration points to `v2`; information load, save, Tool call, and AI Chat tested |
+| PlayMCP temporary registration | Pass | Existing registration points to `v3`; information load, save, Tool call, and AI Chat tested |
 | PlayMCP review request | Not started | Must be requested after final replacement endpoint is verified |
 | Public visibility | Not available yet | Change from private to public after review approval |
 | Contest form | Not submitted | Submit once using the public PlayMCP detail URL |
@@ -43,16 +43,14 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 ## Quality evidence
 
 - The deterministic calculation matches the reference `sky.told.me` output for the fixed 1988-04-19 08:30 Seoul fixture.
-- Gemma receives only the current question and deterministic fact cards, not raw birth input or the Cloudflare token.
+- Cerebras receives only the current question and deterministic fact cards, not raw birth input or the API key.
 - PlayMCP AI Chat passed the user's latest question through `question` and respected a Saju-only request.
-- The deployed guided fallback produced a four-section Korean answer without asking for birthplace again.
-- The Kakao host LLM still shortens some completed Tool answers. The Tool `Response` tab contains the authoritative generated answer.
+- The deployed Cerebras path produced a four-section Korean answer without asking for birthplace again.
+- In the final v3 test, the Kakao host delivered all four sections from the Tool response without adding another interpretation.
 
-## Remaining decisions
+## Deployed generation path
 
-### Selected latency candidate
-
-The local implementation now contains two generation adapters, while the deployed server still uses Cloudflare:
+The implementation contains two generation adapters, and the deployed server explicitly selects Cerebras:
 
 - Cloudflare Gemma 4 is not suitable for the final path because complete readings varied from seconds to more than 30 seconds.
 - Cerebras `gpt-oss-120b` uses the same verified facts and grounding checks with a 2,500ms deadline and 900-token completion budget.
@@ -60,7 +58,7 @@ The local implementation now contains two generation adapters, while the deploye
 - A three-scenario run achieved 3/3 complete readings across Saju, Zi Wei Dou Shu, and Western astrology at 726ms average and 750ms maximum.
 - A provider error, timeout, weak structure, wrong day master, scope leak, or unsupported claim still switches to deterministic chart-specific guidance.
 
-Cerebras is the selected local candidate for the next deployment. It clears the measured 3,000ms p99 boundary but still does not meet the documented 100ms average target, so review risk remains. The free account also permits only five requests per minute.
+Cerebras is the selected preliminary deployment provider. It clears the measured 3,000ms p99 boundary but still does not meet the documented 100ms average target, so review risk remains. The free account also permits only five requests per minute.
 
 ### Preliminary capacity disclosure
 
@@ -73,12 +71,10 @@ The contest MVP intentionally uses the Cerebras free plan to avoid unnecessary i
 
 ## Remaining submission sequence
 
-1. Switch the MCP server factory from Cloudflare to the locally verified Cerebras adapter and run local end-to-end tests.
-2. Deploy the Cerebras preliminary version, update the existing PlayMCP draft in place, and verify AI Chat within the documented five-request-per-minute judging quota.
-3. Request PlayMCP review and monitor the Kakao account email for approval or a correction request.
-4. Before finalist or public exposure, upgrade to paid inference capacity and repeat concurrency and rate-limit tests.
-5. After approval, change visibility from `나에게만 공개` to `전체 공개`.
-6. Submit the public PlayMCP detail URL through the contest form. The form can be submitted only once.
+1. Request PlayMCP review and monitor the Kakao account email for approval or a correction request.
+2. Before finalist or public exposure, upgrade to paid inference capacity and repeat concurrency and rate-limit tests.
+3. After approval, change visibility from `나에게만 공개` to `전체 공개`.
+4. Submit the public PlayMCP detail URL through the contest form. The form can be submitted only once.
 
 ## Official sources
 
