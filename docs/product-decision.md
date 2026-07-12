@@ -1,6 +1,6 @@
 # Product Decision
 
-Updated: 2026-07-05
+Updated: 2026-07-12
 
 ## Decision
 
@@ -65,8 +65,25 @@ The demo is emotionally legible:
 
 1. User enters birth information and a concern.
 2. User asks a real-life concern.
-3. MCP answers with structured interpretation and practical reflection.
+3. MCP returns a complete structured interpretation with practical reflection.
 4. Future finalist version can save the profile to remove repeated input.
+
+### Answer Quality Decision
+
+PlayMCP AI Chat tests showed that the host model summarizes raw chart data too aggressively. It produced acceptable delivery only when the tool response already contained a complete final draft.
+
+The current architecture therefore keeps the calculation deterministic but uses Cloudflare Workers AI Gemma as a replaceable final-answer generator:
+
+1. Calculate the three chart systems locally.
+2. Convert structured results into deterministic, question-scoped fact cards.
+3. Send only the fact cards and current question to Gemma; do not send the full chart dump or direct birth-input summary.
+4. Reject short, refused, malformed, or slow output.
+5. Return the complete answer with an instruction for the host to deliver it verbatim.
+6. Fall back to the deterministic context pack when the generator is unavailable.
+
+Local validation showed that sending the full chart caused counting mistakes, unsupported interpretations, and overly long responses. Fact cards eliminated the observed pillar-count and current-period mistakes and let explicit requests such as "사주팔자만" exclude the other systems entirely.
+
+This decision replaces the earlier assumption that the host AI should always perform the final interpretation.
 
 ## Why MCP Discovery Is Deferred
 
@@ -98,17 +115,18 @@ Use one tool first:
 
 1. `generate_fortune_context`
    - Receives one-time birth information.
-   - Returns Saju / Four Pillars, Zi Wei Dou Shu, and Western natal chart results as Markdown text.
-   - Includes a short instruction block for the host AI: use this context to answer the user's concern warmly, cautiously, and as reflective entertainment.
+   - Receives the user's latest request in the optional `question` field.
+   - Returns a complete Korean counseling answer when Workers AI is configured.
+   - Instructs the host AI to deliver the complete answer without summarizing or adding interpretation.
+   - Falls back to the original chart context when external generation is unavailable or fails quality checks.
    - Does not store the user's profile.
-   - Does not decide the final 상담/해석 inside the tool.
 
 Rationale:
 
-- MCP tools should provide reliable information; the host AI should decide how to apply it to the user's question.
+- Deterministic chart calculation and generative interpretation remain separate modules.
 - The reference service already proves that all three systems can be calculated quickly and copied together as AI-friendly text.
 - A single high-quality tool has less user and model confusion than several overlapping reading-type tools.
-- Reading type is unnecessary because the user's natural-language question already tells the host AI whether the concern is career, relationship, timing, compatibility, or general self-understanding.
+- Reading type is unnecessary because the user's natural-language question already tells the generator whether the concern is career, relationship, timing, compatibility, or general self-understanding.
 
 ## Open Questions
 

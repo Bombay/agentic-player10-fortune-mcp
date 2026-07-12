@@ -1,70 +1,46 @@
-import { calculateNatal } from "@orrery/core/natal";
-import { calculateSaju } from "@orrery/core/saju";
-import type { BirthInput, ZiweiChart } from "@orrery/core/types";
-import { createChart } from "@orrery/core/ziwei";
+import type { BirthInfoInput, NormalizedBirthInfo } from "./birth-info.js";
 import {
-  type BirthInfoInput,
-  type NormalizedBirthInfo,
-  normalizeBirthInfo,
-} from "./birth-info.js";
+  calculateFortune,
+  type FortuneCalculation,
+} from "./fortune-calculation.js";
 import { natalToText, sajuToText, ziweiToText } from "./orrery-text-export.js";
-
-type SiteBirthInput = BirthInput & {
-  timezone?: string;
-};
-
-const createSiteZiweiChart = createChart as (
-  year: number,
-  month: number,
-  day: number,
-  hour: number,
-  minute: number,
-  isMale: boolean,
-  timezone?: string,
-  longitude?: number,
-) => ZiweiChart;
 
 export async function generateFortuneContext(
   input: BirthInfoInput,
 ): Promise<string> {
-  const normalized = normalizeBirthInfo(input);
-  const birthInput = toOrreryBirthInput(normalized);
-  const saju = calculateSaju(birthInput);
-  const ziwei = createSiteZiweiChart(
-    normalized.year,
-    normalized.month,
-    normalized.day,
-    normalized.hour,
-    normalized.minute,
-    normalized.gender === "M",
-    normalized.timezone,
-    normalized.longitude,
-  );
-  const natal = await calculateNatal(birthInput, "P");
+  const calculation = await calculateFortune(input);
+  return formatFortuneContext(calculation);
+}
+
+export function formatFortuneContext(
+  calculation: FortuneCalculation,
+): string {
+  const chartContext = formatFortuneChartContext(calculation);
 
   return [
     formatAiGuidance(),
-    formatInputSummary(normalized),
+    formatInputSummary(calculation.birth),
     "# sky.told.me AI 해석용 전부 복사 결과",
-    sajuToText(saju),
-    ziweiToText(ziwei),
-    natalToText(natal),
+    chartContext,
     formatPrivacyNote(),
   ].join("\n\n");
 }
 
-function toOrreryBirthInput(input: NormalizedBirthInfo): SiteBirthInput {
-  return {
-    year: input.year,
-    month: input.month,
-    day: input.day,
-    hour: input.hour,
-    minute: input.minute,
-    gender: input.gender,
-    latitude: input.latitude,
-    longitude: input.longitude,
-    timezone: input.timezone,
-  };
+export async function generateFortuneChartContext(
+  input: BirthInfoInput,
+): Promise<string> {
+  const calculation = await calculateFortune(input);
+  return formatFortuneChartContext(calculation);
+}
+
+export function formatFortuneChartContext(
+  calculation: FortuneCalculation,
+): string {
+  return [
+    sajuToText(calculation.saju),
+    ziweiToText(calculation.ziwei),
+    natalToText(calculation.natal),
+  ].join("\n\n");
 }
 
 function formatAiGuidance(): string {

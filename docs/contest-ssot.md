@@ -1,6 +1,6 @@
 # Contest and Platform SSOT
 
-Updated: 2026-07-05
+Updated: 2026-07-12
 
 This document is the single source of truth for Agentic Player 10 contest and PlayMCP platform constraints used by this project.
 
@@ -126,11 +126,30 @@ Redeployment result on 2026-07-05:
 - Tool answers must not induce ad exposure.
 - MCP servers with persistent connection issues, auth failures, or harmful behavior may be restricted or removed.
 
+## External AI Decision
+
+- No reviewed contest rule establishes a blanket ban on external AI or external APIs inside an MCP.
+- Public winning MCP tool descriptions provide precedent for backend LLM and external moderation API use.
+- The selected provider is Cloudflare Workers AI with `@cf/google/gemma-4-26b-a4b-it`.
+- Workers AI currently includes a recurring free allocation of 10,000 Neurons per day.
+- Cloudflare states that Workers AI Customer Content is not used to train models or improve Cloudflare or third-party services without explicit consent.
+- The tool sets `openWorldHint: true` because it calls an external service.
+- The tool sets `idempotentHint: false` because generated wording can vary.
+- The code default remains a 2,800ms deadline to protect the PlayMCP response path, but Gemma 4 did not complete a rich answer within that budget.
+- Local fact-card tests with thinking disabled observed complete-answer latency from about 5 to 15.5 seconds. Local quality testing therefore uses a 20,000ms timeout.
+- Do not deploy the external generation path until the latency strategy is decided. Options include a faster Workers AI model, a shorter answer, or accepting a longer platform response time only after PlayMCP testing confirms it is tolerated.
+- Timeout, non-success response, empty output, truncated completion, refusal, fewer than three Markdown sections, or output shorter than 700 characters triggers the deterministic fallback.
+- PlayMCP in KC deployment must inject `CLOUDFLARE_API_TOKEN` as a secret. It must never be committed or embedded in the container image.
+
 ## Personal Data and Storage Assumptions
 
 - PlayMCP in KC documentation does not confirm built-in persistent storage, DB, KV, volume, or secrets as a product feature.
 - Do not assume local container filesystem persistence.
 - The preliminary MVP must not store user birth profile data.
+- The external model request excludes the direct input summary, raw birth date/time, birthplace label, coordinates, user identity, and full chart dump.
+- It sends only the current question and deterministic fact cards selected for that question.
+- Fact cards can still permit indirect inference of birth timing, so they are treated as potentially identifying rather than fully anonymous.
+- The user's question is sent because a focused final answer requires it. Tool guidance should discourage names, contact details, or unrelated sensitive information in that field.
 - The preliminary MVP should avoid OAuth, custom-header identity, external DB, and account-level personalization unless they become strictly required.
 - Users provide birth information per request or per chat session.
 - Tool responses should not echo sensitive input more than needed.
@@ -148,7 +167,7 @@ Redeployment result on 2026-07-05:
 - Keep the implementation simple enough for fast PlayMCP registration and review.
 - Do not implement profile persistence.
 - Do not implement OAuth unless a chosen external API requires it.
-- Prefer a deterministic calculation core plus concise Markdown interpretation.
+- Prefer a deterministic calculation core plus a replaceable, guarded final-answer generator.
 - Prioritize passing PlayMCP information loading, temporary registration, AI chat testing, and review.
 - Save richer retention features for the finals:
   - Saved birth profile.

@@ -1,6 +1,6 @@
 # Testing and Deployment
 
-Updated: 2026-07-05
+Updated: 2026-07-12
 
 ## Local Verification
 
@@ -178,14 +178,37 @@ Optional inputs:
 - `timezone`
 - `latitude`
 - `longitude`
+- `question`
 
 Behavior:
 
-- Calculates Saju, Zi Wei Dou Shu, and Western natal chart data.
-- Returns one Markdown context pack.
+- Calculates Saju, Zi Wei Dou Shu, and Western natal chart data locally.
+- Converts the structured result into deterministic fact cards selected by the user's question.
+- When Cloudflare credentials are configured, generates one complete Korean counseling answer with Workers AI Gemma.
+- Sends the fact cards and current question, but excludes the full chart dump and direct birth-input summary from the external request.
+- Falls back to the original Markdown context pack on timeout, provider error, refusal, or weak output.
 - Does not store birth information.
-- Does not call external APIs during calculation.
-- Leaves the final 상담/해석 to the host AI.
+
+## Workers AI Configuration
+
+Local `.env` keys:
+
+```text
+CLOUDFLARE_ACCOUNT_ID=...
+CLOUDFLARE_API_TOKEN=...
+CLOUDFLARE_AI_MODEL=@cf/google/gemma-4-26b-a4b-it
+CLOUDFLARE_AI_TIMEOUT_MS=2800
+```
+
+For local quality testing, override `CLOUDFLARE_AI_TIMEOUT_MS=20000`. Observed Gemma 4 completion time was approximately 5 to 15.5 seconds. Keep the production value unresolved until a faster model or PlayMCP-tolerated timeout is confirmed.
+
+For PlayMCP in KC:
+
+1. Add `CLOUDFLARE_ACCOUNT_ID` as an environment variable.
+2. Add `CLOUDFLARE_API_TOKEN` as a secret.
+3. Optionally add the model and timeout variables.
+4. Never place the token in Git, `.env.example`, Docker build arguments, or image layers.
+5. Verify both the final-answer path and the fallback path before replacing the current endpoint.
 
 ## License Note
 

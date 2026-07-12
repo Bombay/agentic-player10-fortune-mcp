@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
-import { generateFortuneContext } from "../domain/fortune-context.js";
+import { generateFortuneReading } from "../domain/fortune-reading.js";
+import { createCloudflareReadingGeneratorFromEnv } from "../llm/cloudflare-workers-ai.js";
 
 export const fortuneInputSchema = {
   year: z.number().int().min(1900).max(2100).describe("Birth year in Gregorian calendar."),
@@ -18,27 +19,34 @@ export const fortuneInputSchema = {
   timezone: z.string().min(1).optional().describe("Optional IANA timezone label. Known cities are resolved automatically when possible."),
   latitude: z.number().min(-90).max(90).optional().describe("Optional birthplace latitude. Provide together with longitude for manual coordinates."),
   longitude: z.number().min(-180).max(180).optional().describe("Optional birthplace longitude. Provide together with latitude for manual coordinates."),
+  question: z
+    .string()
+    .max(500)
+    .optional()
+    .describe(
+      "The user's latest fortune or counseling question. Copy the user's request here so the service can produce a focused final reading. If omitted, it produces a general reading.",
+    ),
 };
 
 export const toolDefinition = {
   name: "generate_fortune_context",
   title: "Generate Fortune Context",
   description:
-    "Generates one AI-readable Markdown context pack from birth information, including Saju/Four Pillars, Zi Wei Dou Shu, and Western natal chart data in the same AI-copy style as sky.told.me. Use this tool when the user wants a fortune, astrology, timing, career, relationship, or compatibility-style consultation. Birthplace is required; ask for it before calling the tool. The tool only provides chart information; the host AI should interpret it warmly and cautiously for the user's concern.",
+    "Fortune Counsel(사주 점성술 상담) generates a complete Korean fortune reading from Saju/Four Pillars, Zi Wei Dou Shu, and Western natal chart calculations. Use it for fortune, personality, career, money, relationship, or timing questions. Birthplace is required; ask before calling. Copy the user's latest request into question. The returned 상담 결과 is already the final user-facing answer: deliver it fully without summarizing, shortening, or adding another interpretation.",
   inputSchema: fortuneInputSchema,
   annotations: {
     title: "Generate Fortune Context",
     readOnlyHint: true,
     destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
   },
 } as const;
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "agentic-player10-fortune-context",
-    version: "0.1.0",
+    version: "0.2.0",
   });
 
   server.registerTool(
@@ -50,7 +58,9 @@ export function createMcpServer(): McpServer {
       annotations: toolDefinition.annotations,
     },
     async (input) => {
-      const text = await generateFortuneContext(input);
+      const text = await generateFortuneReading(input, {
+        generator: createCloudflareReadingGeneratorFromEnv(),
+      });
 
       return {
         content: [
