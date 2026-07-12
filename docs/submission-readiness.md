@@ -4,10 +4,7 @@ Checked: 2026-07-12
 
 ## Verdict
 
-The project is functionally complete and reproducible, but it is **not yet ready to request PlayMCP review** for two reasons:
-
-1. The deployed server still uses the old 20-second Gemma path. The local hybrid replacement stays below 3 seconds in the measured sample but still exceeds the separate 100ms average target.
-2. MCP `Origin` validation and the hybrid fallback have been fixed locally but are not yet deployed to PlayMCP in KC.
+The final hybrid server is deployed, connected to the existing PlayMCP draft, and verified end to end. It is technically ready to request PlayMCP review, with one explicit policy risk: measured calls stay below the 3,000ms p99 boundary but exceed the separate 100ms average target.
 
 The contest submission closes on 2026-07-14. Review takes up to seven business days and averages one to two days, so the latency decision and replacement deployment are urgent.
 
@@ -15,16 +12,16 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 
 | Area | Status | Evidence |
 | --- | --- | --- |
-| Kakao Cloud deployment | Pass | `fortune-reading-mcp`, ID `2789`, Active |
-| Public Streamable HTTP endpoint | Pass | `https://fortune-reading-mcp.playmcp-endpoint.kakaocloud.io/mcp` |
+| Kakao Cloud deployment | Pass | `fortune-reading-mcp-v2`, ID `2844`, Active; only one server remains |
+| Public Streamable HTTP endpoint | Pass | `https://fortune-reading-mcp-v2.playmcp-endpoint.kakaocloud.io/mcp` |
 | Supported MCP protocol | Pass | PlayMCP information loading and official MCP Inspector CLI succeeded |
 | Working Tool count | Pass | One Tool; review policy requires at least one |
 | Tool metadata | Pass | `name`, `description`, `inputSchema`, and all five annotations present |
 | Naming policy | Pass | Server and Tool names do not contain `kakao` |
 | Text response format | Pass | Markdown `TextContent` |
 | Response size | Pass | Deterministic fallback measured 6,078 bytes, below the 24k limit |
-| Response latency | **Partial blocker** | Three hybrid 5-call samples: max 2,460-2,554ms, average 2,219-2,447ms; p99 boundary protected locally, 100ms average target not met |
-| Origin validation | Pending deploy | Local implementation rejects untrusted browser origins with HTTP 403 |
+| Response latency | **Policy risk** | Three local samples: max 2,460-2,554ms; deployed sample 2,625ms; 100ms average target not met |
+| Origin validation | Pass | Deployed implementation rejects untrusted browser origins with HTTP 403 |
 | MCP Inspector | Pass | Both `tools/list` and `tools/call` succeeded against the deployed endpoint |
 | Automated tests | Pass | 7 files, 25 tests |
 | TypeScript build | Pass | `npm run build` |
@@ -37,7 +34,7 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 | Secret history scan | Pass | No Cloudflare token pattern found in Git history |
 | Personal data storage | Pass | Birth inputs are not persisted; raw inputs are not sent to Workers AI |
 | Representative image | Pass | Static 600x600 PNG, appropriate to the service |
-| PlayMCP temporary registration | Pass | Existing registration updated in place and AI Chat tested |
+| PlayMCP temporary registration | Pass | Existing registration points to `v2`; information load, save, Tool call, and AI Chat tested |
 | PlayMCP review request | Not started | Must be requested after final replacement endpoint is verified |
 | Public visibility | Not available yet | Change from private to public after review approval |
 | Contest form | Not submitted | Submit once using the public PlayMCP detail URL |
@@ -47,6 +44,7 @@ The contest submission closes on 2026-07-14. Review takes up to seven business d
 - The deterministic calculation matches the reference `sky.told.me` output for the fixed 1988-04-19 08:30 Seoul fixture.
 - Gemma receives only the current question and deterministic fact cards, not raw birth input or the Cloudflare token.
 - PlayMCP AI Chat passed the user's latest question through `question` and respected a Saju-only request.
+- The deployed guided fallback produced a four-section Korean answer without asking for birthplace again.
 - The Kakao host LLM still shortens some completed Tool answers. The Tool `Response` tab contains the authoritative generated answer.
 
 ## Remaining decisions
@@ -62,18 +60,12 @@ The local implementation now uses a bounded hybrid:
 
 Drop-in model replacement was rejected. Llama 3.2 3B was fast but changed the Four Pillars and produced an incomplete answer; Qwen3 returned no normal content in the initial run; Gemma 3 12B was unavailable to the account. The hybrid still does not meet the documented 100ms average target, so review risk remains and must be judged explicitly before submission.
 
-## Submission sequence
+## Remaining submission sequence
 
-1. Commit and push the security, hybrid response, benchmark, and documentation changes.
-2. Delete the old `fortune-context-mcp-v3` rollback server to free one Kakao Cloud slot.
-3. Build a replacement PlayMCP in KC server from the final Git commit.
-4. Inject ordinary environment variables, `CLOUDFLARE_AI_TIMEOUT_MS=2500`, and `CLOUDFLARE_API_TOKEN` as a secret.
-5. Verify `tools/list`, `tools/call`, response size, generated/fallback behavior, and latency with MCP Inspector.
-6. Edit the existing temporary PlayMCP registration, load information, save, and test in AI Chat.
-7. Decide whether the remaining 100ms-average policy risk is acceptable, then request PlayMCP review immediately.
-8. Monitor the Kakao account email for approval or a correction request.
-9. After approval, change visibility from `나에게만 공개` to `전체 공개`.
-10. Submit the public PlayMCP detail URL through the contest form. The form can be submitted only once.
+1. Decide whether the remaining 100ms-average policy risk is acceptable, then request PlayMCP review immediately.
+2. Monitor the Kakao account email for approval or a correction request.
+3. After approval, change visibility from `나에게만 공개` to `전체 공개`.
+4. Submit the public PlayMCP detail URL through the contest form. The form can be submitted only once.
 
 ## Official sources
 

@@ -141,18 +141,17 @@ Current redeployment state after the 2026-07-05 fix:
   - PlayMCP developer console information loading succeeded and the temporary MCP registration was saved with the replacement endpoint.
   - PlayMCP AI Chat called `generate_fortune_context` and generated a career-change reading from an English-birthplace prompt.
 
-Current secured Gemma deployment state observed on 2026-07-12:
+Current hybrid deployment state observed on 2026-07-12:
 
-- Git commit `245e551` was pushed to the public GitHub `main` branch.
-- Active Gemma endpoint: `https://fortune-reading-mcp.playmcp-endpoint.kakaocloud.io/mcp`
-- PlayMCP in KC server: `fortune-reading-mcp`, ID `2789`, status `Active`.
+- Git commit `132a711` was pushed to the public GitHub `main` branch.
+- Active endpoint: `https://fortune-reading-mcp-v2.playmcp-endpoint.kakaocloud.io/mcp`
+- PlayMCP in KC server: `fortune-reading-mcp-v2`, ID `2844`, status `Active`.
 - Runtime configuration uses ordinary environment variables for `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_AI_MODEL`, and `CLOUDFLARE_AI_TIMEOUT_MS`.
 - `CLOUDFLARE_API_TOKEN` is injected through the separate PlayMCP in KC secret field. Its value is not stored in Git, the container image, MCP prompts, responses, or logs.
-- The previous `fortune-context-mcp-v2` server was deleted to free the two-server account limit. `fortune-context-mcp-v3` remains active as a rollback server.
-- Direct `tools/call` verification succeeded with the 1988-04-19 08:30 male Seoul fixture and a Saju-only question. Workers AI returned a grounded Korean reading in about 12 seconds.
+- Previous servers were deleted after replacement verification; only `fortune-reading-mcp-v2` remains.
+- Direct verification succeeded: initialize 123ms, `tools/list` 48ms, and a representative Saju-only `tools/call` 2,625ms.
 - The existing temporary PlayMCP developer-console registration was edited in place, refreshed from the new endpoint, and saved. A second temporary MCP registration was not created.
-- PlayMCP AI Chat passed the original question through the optional `question` argument and called the new endpoint successfully.
-- The host Kakao LLM still shortened parts of the final tool response despite both the tool description and response text instructing it to deliver the completed reading without summarizing. Treat the MCP `Response` tab as the authoritative output when evaluating generation quality.
+- PlayMCP AI Chat passed the original question through the optional `question` argument, called `v2`, and produced a four-section grounded answer without asking for birthplace again.
 
 ## KakaoTalk / Kakao Tools Test Path
 

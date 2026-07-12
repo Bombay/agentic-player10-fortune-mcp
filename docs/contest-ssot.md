@@ -75,14 +75,14 @@ Redeployment result on 2026-07-05:
 
 Secured Gemma deployment result on 2026-07-12:
 
-- Current PlayMCP developer console endpoint: `https://fortune-reading-mcp.playmcp-endpoint.kakaocloud.io/mcp`
-- Current Gemma-enabled PlayMCP in KC server: `fortune-reading-mcp`, ID `2789`, status `Active`.
+- Current PlayMCP developer console endpoint: `https://fortune-reading-mcp-v2.playmcp-endpoint.kakaocloud.io/mcp`
+- Current hybrid PlayMCP in KC server: `fortune-reading-mcp-v2`, ID `2844`, status `Active`.
 - `CLOUDFLARE_API_TOKEN` is configured only in the dedicated PlayMCP in KC secret field. GitHub Secrets are not used because GitHub Actions is not the runtime or deployment executor.
 - The model request contains the user's question and deterministic fortune fact cards, but never the Cloudflare token. The token is used only as the Cloudflare HTTP authorization header.
 - Direct endpoint verification and PlayMCP AI Chat verification both succeeded.
 - PlayMCP AI Chat passed `question` correctly and stayed within the requested Saju-only scope.
 - The Kakao host LLM shortened some of the completed tool answer even though the response said not to summarize. This is a confirmed host-model limitation, not a missing calculation or Gemma-generation failure.
-- `fortune-context-mcp-v3` remains active only as rollback until the new deployment is considered stable.
+- Previous servers `fortune-context-mcp-v3` and `fortune-reading-mcp` were deleted after `v2` passed direct and PlayMCP AI Chat verification. Only `v2` remains.
 
 ## MCP Protocol Constraints
 
@@ -151,7 +151,7 @@ Secured Gemma deployment result on 2026-07-12:
 - The tool sets `idempotentHint: false` because generated wording can vary.
 - The selected local architecture is a bounded hybrid: Gemma 4 gets a 2,500ms deadline, then the MCP returns chart-specific interpretation guidance plus verified facts if generation is late or unsafe.
 - Three five-call local runs on 2026-07-12 measured max 2,460-2,554ms and average 2,219-2,447ms, with one or two grounded Gemma answers per run and guided fallbacks for the remainder. All samples stayed under the mandatory 3,000ms p99 boundary but did not meet the separate 100ms average target.
-- The currently deployed 2026-07-12 server still uses the old 20,000ms timeout and returned answers in about 8.9 to 12.1 seconds. It must be replaced before review.
+- The deployed `v2` server uses the 2,500ms deadline. A representative direct Tool call returned the guided fallback in 2,625ms; initialize took 123ms and `tools/list` took 48ms.
 - Drop-in model checks did not solve both constraints: Llama 3.2 3B changed the calculated Four Pillars despite 1.6s latency; Qwen3 initially returned no normal content; Gemma 3 12B was unavailable to the account.
 - Timeout, non-success response, empty output, truncated completion, refusal, weak structure, a changed day master, scope leakage, or unsupported certainty triggers the guided deterministic fallback.
 - The fallback derives day-master, ten-god, relation, Zi Wei, and Western interpretation rules from the current fact cards. It contains no fixed fixture interpretation.

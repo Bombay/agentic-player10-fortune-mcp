@@ -98,7 +98,9 @@ The hybrid benchmark runs five full reading calls and validates both the generat
 npm run benchmark:reading
 ```
 
-On 2026-07-12, three five-call runs at the 2.5-second deadline measured 2,460-2,554ms maximum and 2,219-2,447ms average, with one or two grounded Gemma answers per run and guided fallbacks for the remainder. This protects the documented 3,000ms p99 boundary in the local samples, but it does not meet PlayMCP's separate 100ms average target. The currently deployed Kakao version still uses the older 20-second quality-test setting and must be replaced before review.
+On 2026-07-12, three five-call runs at the 2.5-second deadline measured 2,460-2,554ms maximum and 2,219-2,447ms average, with one or two grounded Gemma answers per run and guided fallbacks for the remainder. The deployed Kakao endpoint returned a representative guided fallback in 2,625ms. These samples protect the documented 3,000ms p99 boundary, but they do not meet PlayMCP's separate 100ms average target.
+
+Current deployment: `https://fortune-reading-mcp-v2.playmcp-endpoint.kakaocloud.io/mcp` (`fortune-reading-mcp-v2`, ID `2844`, Active).
 
 Do not commit `.env` or put the API token in the Docker image. Use PlayMCP in KC deployment secrets.
 
