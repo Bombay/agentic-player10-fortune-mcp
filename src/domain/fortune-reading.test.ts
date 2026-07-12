@@ -56,9 +56,17 @@ describe("generateFortuneReading", () => {
     const request = generate.mock.calls[0][0];
     expect(request.question).toBe("올해 일과 돈을 자세히 봐줘");
     expect(request.factContext).toContain("# 질문별 해석 규칙");
-    expect(request.factContext).toContain("甲木 일간");
-    expect(request.factContext).toContain("# 검증된 사주 사실");
-    expect(request.factContext).toContain("현재 대운: 2023년 시작 庚申");
+    expect(request.factContext).toContain("일간은 갑목");
+    expect(request.factContext).not.toContain("# 검증된 사주 사실");
+    expect(request.factContext).not.toContain("현재 대운: 2023년 시작 庚申");
+    expect(request.factContext).toContain(
+      "사주 위치 근거 카드: 천간 기준 시주 편재, 일주 본원, 월주 식신, 년주 편재",
+    );
+    expect(request.factContext).toContain(
+      "사주 현재 흐름 근거 카드: 2023년부터 경신 대운",
+    );
+    expect(request.factContext).toContain("자미두수 근거 카드: 명궁");
+    expect(request.factContext).toContain("출생차트 근거 카드: 태양");
     expect(request.factContext).not.toContain("생년월일시");
     expect(request.factContext).not.toContain("출생지: 서울");
     expect(request.factContext).not.toContain("Houses (Placidus)");
@@ -73,11 +81,24 @@ describe("generateFortuneReading", () => {
 
     expect(text).toContain("# AI 답변 지침");
     expect(text).toContain("# 질문별 해석 규칙");
-    expect(text).toContain("甲木 일간");
-    expect(text).toContain("偏財:");
+    expect(text).toContain("일간은 갑목");
+    expect(text).toContain("편재:");
     expect(text).toContain("# 검증된 사주 사실");
     expect(text).not.toContain("# 입력 요약");
     expect(text).not.toContain("출생지: 서울");
+  });
+
+  it("uses an accessible default question when the host omits the question", async () => {
+    const generate = vi.fn(async () => detailedReading());
+
+    await generateFortuneReading(birthInput, {
+      generator: { generate },
+      currentDate: new Date("2026-07-12T00:00:00.000Z"),
+    });
+
+    expect(generate.mock.calls[0][0].question).toBe(
+      "사주팔자를 중심으로 전체 흐름을 처음 보는 사람도 이해하게 쉽고 구체적으로 풀어줘. 자미두수와 출생차트에서 같은 결론이 보이면 보조 근거를 하나씩 덧붙여줘.",
+    );
   });
 });
 
@@ -91,11 +112,11 @@ describe("formatInterpretationGuidance", () => {
       "- 현재 대운: 2023년 시작 壬子, 천간 偏官, 지지 正官",
     ].join("\n"));
 
-    expect(guidance).toContain("丙火 일간");
-    expect(guidance).toContain("偏官:");
+    expect(guidance).toContain("일간은 병화");
+    expect(guidance).toContain("편관:");
     expect(guidance).toContain("충은");
     expect(guidance).not.toContain("甲木");
-    expect(guidance).not.toContain("偏財:");
+    expect(guidance).not.toContain("편재:");
     expect(guidance).not.toContain("자형은");
   });
 });

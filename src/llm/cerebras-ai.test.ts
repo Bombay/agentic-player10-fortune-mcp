@@ -40,12 +40,22 @@ describe("CerebrasAiReadingGenerator", () => {
       authorization: "Bearer secret-token",
     });
     expect(body.model).toBe("gpt-oss-120b");
+    expect(body.temperature).toBe(0.1);
     expect(body.max_completion_tokens).toBe(900);
     expect(body.reasoning_effort).toBe("low");
     expect(body.reasoning_format).toBe("hidden");
     expect(body.stream).toBe(false);
+    expect(body.messages[0].content).toContain("[작성 순서]");
+    expect(body.messages[0].content).toContain("계산 근거를 빼지 않되");
+    expect(body.messages[0].content).toContain("지장간 원문을 복사하거나");
+    expect(body.messages[0].content).toContain("모든 문장을 존댓말로");
+    expect(body.messages[0].content).toContain("생활 장면");
+    expect(body.messages[0].content).toContain("자미두수 근거 1개");
     expect(body.messages[1].content).toContain("사주팔자만 깊게 봐줘");
     expect(body.messages[1].content).toContain("현재 대운 庚申");
+    expect(body.messages[1].content).toContain("최종 표현 확인");
+    expect(body.messages[1].content).toContain("근거의 위치·시기");
+    expect(body.messages[1].content).toContain("자미두수와 출생차트");
   });
 
   it("is disabled when the API key is missing", () => {

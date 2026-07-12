@@ -60,7 +60,7 @@ export class CerebrasAiReadingGenerator implements FortuneReadingGenerator {
           { role: "system", content: buildSystemPrompt() },
           { role: "user", content: buildUserPrompt(request) },
         ],
-        temperature: 0.2,
+        temperature: 0.1,
         max_completion_tokens: this.maxTokens,
         reasoning_effort: "low",
         reasoning_format: "hidden",

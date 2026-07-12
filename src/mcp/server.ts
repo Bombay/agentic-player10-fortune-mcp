@@ -46,7 +46,7 @@ export const toolDefinition = {
 export function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "agentic-player10-fortune-context",
-    version: "0.3.0",
+    version: "0.3.1",
   });
 
   server.registerTool(

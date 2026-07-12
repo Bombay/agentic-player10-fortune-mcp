@@ -1,6 +1,6 @@
 {
   "name": "agentic-player10-fortune-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "PlayMCP-compatible fortune context MCP for Saju, Zi Wei Dou Shu, and Western natal charts.",
   "license": "AGPL-3.0-only",
   "type": "module",

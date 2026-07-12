@@ -17,7 +17,8 @@ export type GenerateFortuneReadingOptions = {
   currentDate?: Date;
 };
 
-const DEFAULT_QUESTION = "내 사주와 현재 흐름을 전체적으로 자세히 봐줘.";
+const DEFAULT_QUESTION =
+  "사주팔자를 중심으로 전체 흐름을 처음 보는 사람도 이해하게 쉽고 구체적으로 풀어줘. 자미두수와 출생차트에서 같은 결론이 보이면 보조 근거를 하나씩 덧붙여줘.";
 
 export async function generateFortuneReading(
   input: FortuneReadingInput,
@@ -32,10 +33,7 @@ export async function generateFortuneReading(
   const question = input.question?.trim() || DEFAULT_QUESTION;
   const currentDate = options.currentDate ?? new Date();
   const factContext = formatFortuneFacts(calculation, question, currentDate);
-  const guidedFactContext = [
-    formatInterpretationGuidance(factContext),
-    factContext,
-  ].join("\n\n");
+  const guidedFactContext = formatInterpretationGuidance(factContext);
 
   try {
     const reading = await options.generator.generate({
